@@ -1,0 +1,553 @@
+#!/usr/local/bin/bash
+###########################################################
+# @Author: dezhaoli@tencent.com
+# @Date:   
+# Please contact dezhaoli if you have any questions.
+###########################################################
+
+: ${XARGPARES_DEBUG:=false}
+XARGPARES_MAIN_EX_NAME='main-ex'
+XARGPARES_LABEL_NAME='label'
+# XARGPARES_USE_BASH_ARGV
+
+
+
+
+XARGPARES_REGEXP_SECTION2="
+/[[:space:]]*local[[:space:]]+([^[:space:]]*)=(.*[^[:space:]])[[:space:]]+#@[[:space:]]*(.*)/ {
+    s//\3;dest=\1;default=\2;section=2;/;
+    s/^[[:space:]]*([\"']?[a-zA-Z0-9_]+[\"']?)([[:space:]]*;.*)/pos=\1\2/
+
+    s/^[[:space:]]*([\"']?--[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/long=\1\2/
+    s/(.*;)[[:space:]]*([\"']?--[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/\1long=\2\3/
+
+    s/^[[:space:]]*([\"']?-[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/short=\1\2/
+    s/(.*;)[[:space:]]*([\"']?-[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/\1short=\2\3/
+
+    s/;[[:space:]]*;/;/g
+    s/^;//g
+    p;
+}
+"
+XARGPARES_REGEXP_SECTION5="
+/[[:space:]]*([^[:space:]]*)=(.*[^[:space:]])[[:space:]]+#@[[:space:]]*(.*)/ {
+    s//\3;dest=\1;default=\2;section=5;/;
+
+    s/^[[:space:]]*([\"']?--[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/long=\1\2/
+    s/(.*;)[[:space:]]*([\"']?--[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/\1long=\2\3/
+
+    s/^[[:space:]]*([\"']?-[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/short=\1\2/
+    s/(.*;)[[:space:]]*([\"']?-[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/\1short=\2\3/
+
+    s/;[[:space:]]*;/;/g
+    s/^;//g
+    p;
+}
+"
+
+
+XARGPARES_Class_Function_Signature="
+    func=
+    arg=
+    alia=
+    flag=
+    desc=
+"
+XARGPARES_Class_Function_Body="
+    dest=
+    default=
+    pos=
+    short=
+    long=
+    action=
+    nargs=
+    desc=
+"
+
+function _class_to_string()
+{
+    local class="$1"
+    eval echo $(echo $class |sed -nE '/([a-z]+)=/s//\1=\"\$\1;\"/gp')
+}
+
+function _print_usage()
+{
+    { local column_1="$1" column_2="$2" column_0="$3" ;}
+    # echo "[${column_1}] [${column_2}]"
+    printf "%3s %s%-80s %s \n" "${column_0}" "" "${column_1}" "${column_2:+#}${column_2}"
+}
+
+# function _print_usages()
+# {
+#     echo "Usage: $(basename $0) <command> [options] [positional arguments]"
+#     echo "$1" | sed -E 's/[[:space:]]*(\*?)[[:space:]]*(.*[^[:space:]])[[:space:]]*#?(.*)/\1#\2#\3/' | while read line; do
+        
+#         local c=${line#*#}
+#         c=${c%#*}
+#         if [[ "$line" =~ ^\s*$ ]]; then
+#             # echo "[$line]1"
+#             echo ""
+#         elif [[ "$line" =~ ":#" ]]; then
+#             # echo "[$line]2"
+#             echo "$c"
+#         elif [[ "$line" =~ ^.*#.*#.*$ ]]; then
+#             # echo "[$line]3"
+#             _print_usage "$c" "${line##*#}" "${line%%#*}"
+#         elif [[ "$line" =~ ^.*#.*$ ]]; then
+#             _print_usage "" "$line"
+#         else
+#             _print_usage "$line"
+#         fi
+#     done
+# }
+
+# function _usage_verbose()
+# {
+    
+# }
+
+#@
+function _usage_concise()
+{
+    shopt -qo xtrace && set +x && local XTRACE=true
+    echo -e "usage: $(basename $0) <command> [-h] [options] [positional arguments]\ncommand:"
+ 
+    local line=
+
+    local eol=$'\n '
+
+    local section=
+
+    eval local ${XARGPARES_Class_Function_Signature}
+
+    local is_last=false
+    local opts_str=
+    local poss_str=
+
+    local last_func=
+    local last_flag=
+    local last_desc=
+
+    
+    eval local ${XARGPARES_Class_Function_Body}
+    function reset_arg()
+    {
+        section=
+
+        eval ${XARGPARES_Class_Function_Signature}
+
+        eval ${XARGPARES_Class_Function_Body}
+    }
+    function print_last()
+    {
+        if $is_last; then
+            is_last=false
+            _print_usage "${last_func}${opts_str:+ }${opts_str}${poss_str:+ }${poss_str}" "$last_desc" "$last_flag"
+        fi
+    }
+
+    while read line; do
+        $XARGPARES_DEBUG && echo "###line=[$line]"
+        reset_arg
+        eval $line
+        if ((section==1)); then
+            $XARGPARES_DEBUG && _class_to_string "$XARGPARES_Class_Function_Signature"
+            print_last
+            is_last=true
+            last_func="${alia:-$func}"
+            last_desc="$desc"
+            last_flag="$flag"
+            opts_str=
+            poss_str=
+            
+        elif ((section==2)); then
+            $XARGPARES_DEBUG && _class_to_string "$XARGPARES_Class_Function_Body"
+            local opt_str=
+            local pos_str=
+            if [[ -n "$short" && -n "$long" ]]; then
+                opt_str="${short}|${long}"
+            elif [[ -n "$short" ]]; then
+                opt_str="$short"
+            elif [[ -n "$long" ]]; then
+                opt_str="$long"
+            fi
+            if [[ -n "$opt_str" ]]; then
+                # if [[ -n "$default" ]]; then
+                #     opt_str="$opt_str ($default)"
+                # else
+                    if [[ "$action" =~ store_.* ]]; then
+                        opt_str="$opt_str"
+                    else
+                        opt_str="$opt_str arg"
+                    fi
+                # fi
+                opts_str="${opts_str}[$opt_str]${opt_str:+ }"
+            else
+                if [[ "$nargs" == '+' ]]; then
+                    if [[ -n "$default" ]]; then
+                        pos_str="[${pos:-$dest}...]"
+                    else
+                        pos_str="${pos:-$dest}..."
+                    fi
+                else
+                    if [[ -n "$default" ]]; then
+                        pos_str="[${pos:-$dest}]"
+                    else
+                        pos_str="${pos:-$dest}"
+                    fi
+                fi
+                
+                poss_str="${poss_str}$pos_str${pos_str:+ }"
+                
+            fi
+            
+        elif ((section==3)); then
+            print_last
+            if [[ "$alia" == "$XARGPARES_LABEL_NAME" ]]; then
+                echo "$desc"
+            fi
+        elif ((section==4)); then
+            print_last
+            echo "$desc"
+
+        elif ((section==5)); then
+            $XARGPARES_DEBUG && eval _class_to_string "$XARGPARES_Class_Function_Body"
+
+            local opt_str=
+            if [[ -n "$short" && -n "$long" ]]; then
+                opt_str="${short}, ${long}"
+            elif [[ -n "$short" ]]; then
+                opt_str="$short"
+            elif [[ -n "$long" ]]; then
+                opt_str="$long"
+            fi
+            if [[ -n "$opt_str" ]]; then
+                if [[ ! "$action" =~ store_.* ]]; then
+                    opt_str="$opt_str arg"
+                fi
+                if [[ -n "$default" ]]; then
+                    opt_str="$opt_str ($default)"
+                fi
+
+                _print_usage "$opt_str" "$desc"
+            fi
+            
+        else
+            echo "error: line=[$line]" >&2
+            exit 1
+        fi
+    done< <(< "$0" sed  -nE "
+    H
+    /^##@@[[:space:]]*(alia='$XARGPARES_LABEL_NAME'.*)/ {
+        s//section=3;\1/
+        s/;[[:space:]]*;/;/g
+        p
+    }
+    x
+    /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+        s//section=1;func=\2;\1/
+        p
+        : loop_2
+        n
+        /^}/d
+        ${XARGPARES_REGEXP_SECTION2}
+
+        b loop_2
+    }
+    /^##@@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+        s//section=4;func=\2;\1/
+        s/;[[:space:]]*;/;/g
+        p
+        : loop_5
+        n
+        /^}/d
+        ${XARGPARES_REGEXP_SECTION5}
+
+        b loop_5
+    }
+
+    ")
+    print_last
+    ${XTRACE:-false} && set -x
+}
+
+
+#@ desc="auto find and parse bash arguages"
+function ____()
+{
+    shopt -qo xtrace && set +x && local XTRACE=true
+
+    if (($#==0)) && ${XARGPARES_USE_BASH_ARGV:-true}; then
+        local offset=1
+        local args=()
+        local i=${#BASH_ARGV[@]}
+        while (( i - offset > 0 )); do
+            local arg="${BASH_ARGV[i - 1 - $offset]}"
+            ((i=i-1))
+            if [[ " ${IGNORE_BASH_ARGV[*]} " =~ " $arg " ]]; then # TODO: remove this ugly code
+                continue
+            fi
+            args[${#args[@]}]="$arg"
+        done
+        set -- "${args[@]}"
+    fi
+
+    parse_args "$@"
+
+    ${XTRACE:-false} && set -x
+}
+
+#@ desc="parse bash arguages, like getops"
+function parse_args(){
+    shopt -qo xtrace && set +x && local XTRACE=true
+
+    local func=""
+    for func in "${FUNCNAME[@]}"; do
+        if [[ "$func" != "parse_args" && "$func" != "____" ]]; then
+            break
+        fi
+    done
+
+    local -A s_optspecs
+    local -A l_optspecs
+    local p_argspecs=()
+
+    local line=
+
+
+    eval local ${XARGPARES_Class_Function_Body}
+
+    function reset_arg()
+    {
+        eval ${XARGPARES_Class_Function_Body}
+    }
+    function parse_line()
+    {
+        if [[ -z "$line" ]]; then
+            return 1
+        fi
+        eval $line
+    }
+
+    function func_usage()
+    {
+
+        local opts_str=
+        local poss_str=
+        while read line; do
+            $XARGPARES_DEBUG &&  echo "##line=[$line]"
+            reset_arg
+            parse_line
+            $XARGPARES_DEBUG && eval _class_to_string "$XARGPARES_Class_Function_Body"
+
+            local opt_str=
+            local pos_str=
+            if [[ -n "$short" && -n "$long" ]]; then
+                opt_str="${short}, ${long}"
+            elif [[ -n "$short" ]]; then
+                opt_str="$short"
+            elif [[ -n "$long" ]]; then
+                opt_str="$long"
+            fi
+            if [[ -n "$opt_str" ]]; then
+                if [[ ! "$action" =~ store_.* ]]; then
+                    opt_str="$opt_str arg"
+                fi
+                if [[ -n "$default" ]]; then
+                    opt_str="$opt_str ($default)"
+                fi
+
+                opts_str="$opts_str\n$(_print_usage "$opt_str" "$desc")"
+            else
+                if [[ "$nargs" == '+' ]]; then
+                    if [[ -n "$default" ]]; then
+                        pos_str="[${pos:-$dest}... ($default)]"
+                    else
+                        pos_str="${pos:-$dest}..."
+                    fi
+                else
+                    if [[ -n "$default" ]]; then
+                        pos_str="[${pos:-$dest} ($default)]"
+                    else
+                        pos_str="${pos:-$dest}"
+                    fi
+                fi
+                
+                poss_str="$poss_str\n$(_print_usage "$pos_str" "$desc")"
+                
+            fi
+
+
+        done< <(< "$0" sed  -nE "
+        /^function $func\(\)/,/^}/ { 
+            ${XARGPARES_REGEXP_SECTION2}
+        }")
+
+        echo -e "usage: $(basename $0) ${alia:-$func} [-h] [options] [positional arguments] 
+${opts_str:+"options:"}${opts_str}
+${poss_str:+"positional arguments:"}${poss_str}
+"
+
+    }
+
+    function _die()
+    {
+        local msg=$1
+        func_usage >&2
+        echo -e "error: $msg" >&2
+        exit 1
+    }
+
+    if [[ "$#" == 1 && ( "$1" == "-h" || "$1" == "-help" || "$1" == "--help" )  ]]; then
+        func_usage
+        exit 0
+    fi
+    
+    while read line; do
+        $XARGPARES_DEBUG && echo "#line=[$line]"
+        reset_arg
+        parse_line
+        $XARGPARES_DEBUG && _class_to_string "$XARGPARES_Class_Function_Body"
+
+        [[ -z "$short" && -z "$long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
+        [[ -n "$short" ]] && s_optspecs["$short"]="$line"
+        [[ -n "$long" ]] && l_optspecs["$long"]="$line"
+
+
+    done< <(< "$0" sed  -nE "
+    /^function $func\(\)/,/^}/ { 
+        ${XARGPARES_REGEXP_SECTION2}
+    }")
+
+
+# set -x
+    local is_force_pos=false
+    local p_index=0
+    while (( "$#" )); do
+        local x_i_x="$1" # NOTE: be careful, the name should be complicated here to avoid conflict
+        shift
+        if [[ "${x_i_x}" == "--" ]]; then
+            is_force_pos=true
+            continue
+        fi
+        local line=
+        reset_arg
+        if [[ "${x_i_x}" =~ ^-[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then
+            aaaa=
+            line="${s_optspecs["${x_i_x}"]}"
+        elif [[ "${x_i_x}" =~ ^--[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then
+            bbbb=
+            line="${l_optspecs["${x_i_x}"]}"
+        else
+            ((p_index < ${#p_argspecs[@]})) || _die "unrecognized arguments: ${x_i_x}"
+            line="${p_argspecs[$p_index]}"
+            ((p_index++))
+        fi
+        parse_line || _die "argument ${x_i_x}: missing definition"
+
+        if [[ "$action" =~ store_.* ]];then
+            local val=${action##store_}
+            printf -v "$dest" "%s" "$val"
+        elif [[ -z "$short" && -z "$long" ]]; then # position argument
+            if [[ "$nargs" == '+' || "$nargs" == '*' ]]; then
+                eval "$dest+=( \"${x_i_x}\" )"
+                while (( "$#" )); do
+                    i="$1"
+                    if [[ "${x_i_x}" =~ ^--?[-a-zA-Z0-9_]*$ ]]; then
+                        break
+                    fi
+                    eval "$dest+=( \"${x_i_x}\" )"
+                    shift
+                done
+            else
+                printf -v "$dest" "%s" "${x_i_x}"
+            fi
+        else
+            (($#)) || _die "argument ${x_i_x}: expected one argument"
+            printf -v "$dest" "%s" "$1"
+            shift
+        fi
+    done
+
+    while ((p_index < ${#p_argspecs[@]})); do
+        reset_arg
+        line="${p_argspecs[$p_index]}"
+        parse_line
+        if [[ "$nargs" == '*' || "$nargs" == '?' || -n "$default" ]]; then
+            ((p_index++))
+        else
+            _die "the following arguments are required: ${pos:-$dest}"
+        fi
+        
+    done
+
+    ${XTRACE:-false} && set -x
+}
+
+
+
+function main()
+{
+    shopt -qo xtrace && set +x && local XTRACE=true
+
+    XARGPARES_USE_BASH_ARGV=false
+    eval local ${XARGPARES_Class_Function_Signature}
+    # find main-ex function and call it
+    {
+        local args=("$@")
+        
+        while read line; do
+            # echo "==>[$line]"
+            eval ${XARGPARES_Class_Function_Signature}
+            eval $line
+            if [[ "$XARGPARES_MAIN_EX_NAME" == "$alia" && -n "$func" ]]; then
+                command -v "$func" >/dev/null 2>&1 || _die "the function[$func] pointed to by alia[$alia] was not found"
+
+                args=("$func" "${args[@]}")
+                # echo "before: args=${args[*]}" 
+                "${args[@]}"
+                # echo "after: args=${args[@]}"
+            fi
+    
+        done< <(< "$0" sed  -nE "
+        /^##@@[[:space:]]*(.*)/ {
+            s//\1/
+            p
+        } 
+        ")
+    }
+
+    # show usage
+    if (( ${#args[@]} == 0 )); then
+        _usage_concise >&2
+        exit 0
+    fi
+
+    # find the real sub command function
+    {
+        # local args=("$@")
+        while read line; do
+            # echo "==>[$line]"
+            eval ${XARGPARES_Class_Function_Signature}
+            eval $line
+            if [[ "${args[0]}" == "$alia" ]]; then
+                args[0]="$func"
+            fi
+    
+        done< <(< "$0" sed  -nE "
+        H
+        x
+        /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+            s//func=\2;\1/
+            p
+        } 
+        ")
+    }
+
+    ${XTRACE:-false} && set -x
+
+    "${args[@]}"
+
+
+}
+
