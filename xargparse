@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env -S bash
 ###########################################################
 # @Author: dezhaoli@tencent.com
 # @Date:   
@@ -14,8 +14,8 @@ XARGPARES_LABEL_NAME='label'
 
 
 XARGPARES_REGEXP_SECTION2="
-/[[:space:]]*local[[:space:]]+([^[:space:]]*)=(.*[^[:space:]])[[:space:]]+#@[[:space:]]*(.*)/ {
-    s//\3;dest=\1;default=\2;section=2;/;
+/[[:space:]]*(local[[:space:]]+)?([^[:space:]]*)=(.*[^[:space:]])[[:space:]]+#@[[:space:]]*(.*)/ {
+    s//\4;dest=\2;default=\3;section=2;/;
     s/^[[:space:]]*([\"']?[a-zA-Z0-9_]+[\"']?)([[:space:]]*;.*)/pos=\1\2/
 
     s/^[[:space:]]*([\"']?--[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/long=\1\2/
@@ -30,8 +30,8 @@ XARGPARES_REGEXP_SECTION2="
 }
 "
 XARGPARES_REGEXP_SECTION5="
-/[[:space:]]*([^[:space:]]*)=(.*[^[:space:]])[[:space:]]+#@[[:space:]]*(.*)/ {
-    s//\3;dest=\1;default=\2;section=5;/;
+/[[:space:]]*(local[[:space:]]+)?([^[:space:]]*)=(.*[^[:space:]])[[:space:]]+#@[[:space:]]*(.*)/ {
+    s//\4;dest=\2;default=\3;section=5;/;
 
     s/^[[:space:]]*([\"']?--[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/long=\1\2/
     s/(.*;)[[:space:]]*([\"']?--[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/\1long=\2\3/
@@ -111,7 +111,7 @@ function _usage_concise()
 {
     shopt -qo xtrace && set +x && local XTRACE=true
     echo -e "usage: $(basename $0) <command> [-h] [options] [positional arguments]\ncommand:"
- 
+ # set -x
     local line=
 
     local eol=$'\n '
@@ -185,9 +185,9 @@ function _usage_concise()
             else
                 if [[ "$nargs" == '+' ]]; then
                     if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}...]"
+                        pos_str="[${pos:-$dest}... ($default)]"
                     else
-                        pos_str="${pos:-$dest}..."
+                        pos_str="[${pos:-$dest}...]"
                     fi
                 else
                     if [[ -n "$default" ]]; then
