@@ -16,10 +16,10 @@ Get the script:
 
     If you need to install the latest development version
 
-        brew unlink pidcat
+        brew unlink xargparse
         brew install --HEAD xargparse
 
- * Others: Download the `pidcat.py` and place it on your PATH.
+ * Others: Download the `xargparse` and place it on your PATH.
  
 Make sure that GNU `bash`, version 5, is on your PATH. This script will
 not work unless this is that case. That means, when you type `bash` and press
