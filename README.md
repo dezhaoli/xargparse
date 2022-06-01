@@ -3,6 +3,51 @@ xargparse
 
 Parser for command-line options, arguments and sub-commands
 
+The `xargparse` makes it easy to write user-friendly command-line interfaces like what `argparse` does for python. The program defines what arguments it requires, and xargparse will figure out how to parse those out of BASH_ARGV. The `xargparse` also automatically generates help and usage messages and issues errors when users give the program invalid arguments.
+
+
+Example
+
+Let us start with a very simple example
+
+./examples/cmd.sh
+```shell
+#@
+function simple_fun()
+{
+	local a=A 		#@ desc='set a'
+	b=B 			#@ desc='set b'
+	____ "$@"
+
+
+	echo "a=$a"
+	echo "b=$b"
+}
+```
+
+
+Here is an example of the output when running from the ./examples/cmd.sh:
+```shell
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh
+usage: cmd.sh <command> [-h] [options] [positional arguments]
+command:
+    simple_fun [a] [b]
+  * rename_fun [-v|--version arg] [-f] [--key arg]  file [path] [workspace] [others...]  #Function Destcription.
+global options:
+    -b arg (dezhaoli)                                                                #set bundleid
+some extend message...
+DEZHAOLI-MB4:examples dezhaoli$
+DEZHAOLI-MB4:examples dezhaoli$
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh simple_fun -h
+usage: cmd.sh rename_fun [-h] [options] [positional arguments]
+
+positional arguments:
+    [a (A)]                                                                          #set a
+    [b (B)]                                                                          #set b
+
+DEZHAOLI-MB4:examples dezhaoli$
+```
+
 
 
 Install
@@ -21,7 +66,7 @@ Get the script:
 
  * Others: Download the `xargparse` and place it on your PATH.
  
-Make sure that GNU `bash`, version 5, is on your PATH. This script will
+Make sure that GNU `bash`, at least version 5, is on your PATH. This script will
 not work unless this is that case. That means, when you type `bash` and press
 enter into your terminal something actually happens.
 
