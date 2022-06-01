@@ -551,3 +551,7 @@ function main()
 
 }
 
+if [[ "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
+    _usage_concise
+fi
+
