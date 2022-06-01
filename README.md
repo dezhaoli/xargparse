@@ -24,7 +24,10 @@ function simple_fun()
 	echo "b=$b"
 }
 ```
-
+All you need to do is:
+1. add `#@` before the function line, 
+2. add `#@` in the end of parameter line
+3. add `____ #@` after all the parameters
 
 Here is an example of the output when running from the ./examples/cmd.sh:
 ```shell
@@ -32,10 +35,6 @@ DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh
 usage: cmd.sh <command> [-h] [options] [positional arguments]
 command:
     simple_fun [a] [b]
-  * rename_fun [-v|--version arg] [-f] [--key arg]  file [path] [workspace] [others...]  #Function Destcription.
-global options:
-    -b arg (dezhaoli)                                                                #set bundleid
-some extend message...
 DEZHAOLI-MB4:examples dezhaoli$
 DEZHAOLI-MB4:examples dezhaoli$
 DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh simple_fun -h
@@ -46,6 +45,15 @@ positional arguments:
     [b (B)]                                                                          #set b
 
 DEZHAOLI-MB4:examples dezhaoli$
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh simple_fun
+a=A
+b=B
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh simple_fun "reset a's value"
+a=reset a's value
+b=B
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh simple_fun "reset a's value" "reset b's value"
+a=reset a's value
+b=reset b's value
 ```
 
 
