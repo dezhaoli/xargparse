@@ -146,7 +146,8 @@ Get the script:
 
  *  OS X: Use [Homebrew][2].
 
-         brew install xargparse
+         brew tap dezhaoli/d
+	 brew install xargparse
 
     If you need to install the latest development version
 
