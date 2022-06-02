@@ -5,10 +5,33 @@
 # Please contact dezhaoli if you have any questions.
 ###########################################################
 
-: ${XARGPARES_DEBUG:=false}
-XARGPARES_MAIN_EX_NAME='main-ex'
-XARGPARES_LABEL_NAME='label'
+
+# Copyright 2009, The Android Open Source Project
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#   http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+
+
+
+
+
+
+# : ${XARGPARES_DEBUG:=false}
+# XARGPARES_MAIN_EX_NAME='main-ex'
+# XARGPARES_LABEL_NAME='label'
 # XARGPARES_USE_BASH_ARGV
+
 
 
 
@@ -147,11 +170,11 @@ function _usage_concise()
     }
 
     while read line; do
-        $XARGPARES_DEBUG && echo "###line=[$line]"
+        ${XARGPARES_DEBUG:-false} && echo "###line=[$line]"
         reset_arg
         eval $line
         if ((section==1)); then
-            $XARGPARES_DEBUG && _class_to_string "$XARGPARES_Class_Function_Signature"
+            ${XARGPARES_DEBUG:-false} && _class_to_string "$XARGPARES_Class_Function_Signature"
             print_last
             is_last=true
             last_func="${alia:-$func}"
@@ -161,7 +184,7 @@ function _usage_concise()
             poss_str=
             
         elif ((section==2)); then
-            $XARGPARES_DEBUG && _class_to_string "$XARGPARES_Class_Function_Body"
+            ${XARGPARES_DEBUG:-false} && _class_to_string "$XARGPARES_Class_Function_Body"
             local opt_str=
             local pos_str=
             if [[ -n "$short" && -n "$long" ]]; then
@@ -215,7 +238,7 @@ function _usage_concise()
             
         elif ((section==3)); then
             print_last
-            if [[ "$alia" == "$XARGPARES_LABEL_NAME" ]]; then
+            if [[ "$alia" == "label" ]]; then
                 echo "$desc"
             fi
         elif ((section==4)); then
@@ -223,7 +246,7 @@ function _usage_concise()
             echo "$desc"
 
         elif ((section==5)); then
-            $XARGPARES_DEBUG && eval _class_to_string "$XARGPARES_Class_Function_Body"
+            ${XARGPARES_DEBUG:-false} && eval _class_to_string "$XARGPARES_Class_Function_Body"
 
             local opt_str=
             if [[ -n "$short" && -n "$long" ]]; then
@@ -250,7 +273,7 @@ function _usage_concise()
         fi
     done< <(< "$0" sed  -nE "
     H
-    /^##@@[[:space:]]*(alia='$XARGPARES_LABEL_NAME'.*)/ {
+    /^##@@[[:space:]]*(alia='label'.*)/ {
         s//section=3;\1/
         s/;[[:space:]]*;/;/g
         p
@@ -347,10 +370,10 @@ function parse_args(){
         local opts_str=
         local poss_str=
         while read line; do
-            $XARGPARES_DEBUG &&  echo "##line=[$line]"
+            ${XARGPARES_DEBUG:-false} &&  echo "##line=[$line]"
             reset_arg
             parse_line
-            $XARGPARES_DEBUG && eval _class_to_string "$XARGPARES_Class_Function_Body"
+            ${XARGPARES_DEBUG:-false} && eval _class_to_string "$XARGPARES_Class_Function_Body"
 
             local opt_str=
             local pos_str=
@@ -428,10 +451,10 @@ ${poss_str:+"positional arguments:"}${poss_str}
     fi
     
     while read line; do
-        $XARGPARES_DEBUG && echo "#line=[$line]"
+        ${XARGPARES_DEBUG:-false} && echo "#line=[$line]"
         reset_arg
         parse_line
-        $XARGPARES_DEBUG && _class_to_string "$XARGPARES_Class_Function_Body"
+        ${XARGPARES_DEBUG:-false} && _class_to_string "$XARGPARES_Class_Function_Body"
 
         [[ -z "$short" && -z "$long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
         [[ -n "$short" ]] && s_optspecs["$short"]="$line"
@@ -524,7 +547,7 @@ function main()
             # echo "==>[$line]"
             eval ${XARGPARES_Class_Function_Signature}
             eval $line
-            if [[ "$XARGPARES_MAIN_EX_NAME" == "$alia" && -n "$func" ]]; then
+            if [[ "main-ex" == "$alia" && -n "$func" ]]; then
                 command -v "$func" >/dev/null 2>&1 || _die "the function[$func] pointed to by alia[$alia] was not found"
 
                 args=("$func" "${args[@]}")
@@ -576,6 +599,8 @@ function main()
 }
 
 if [[ "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
+
+    echo "$(basename "$0") 1.0.1"
     _usage_concise
 fi
 
