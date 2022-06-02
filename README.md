@@ -57,12 +57,13 @@ b=reset b's value
 ```
 
 Let's take a more complicated example
+
 ./examples/cmd.sh
+
 ```shell
 #@ alia="rename_fun"; desc='Function Destcription.'; flag='*'
 function complicated_fun()
 {
-    # set -x
     local version="2.0.0"                       #@ -v; --version ;desc="option 1's description"
     local is_force=false                        #@ '-f';action='store_true';desc="option 2's description"
     local key=~                                 #@ "--key"; desc="key's description"
@@ -92,9 +93,6 @@ usage: cmd.sh <command> [-h] [options] [positional arguments]
 command:
     simple_fun [a] [b]
   * rename_fun [-v|--version arg] [-f] [--key arg]  file [path] [workspace] [others...]  #Function Destcription.
-global options:
-    -b arg (dezhaoli)                                                                #set bundleid
-some extend message...
 DEZHAOLI-MB4:examples dezhaoli$
 DEZHAOLI-MB4:examples dezhaoli$
 DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh rename_fun
@@ -134,6 +132,11 @@ ws=apks
 DEZHAOLI-MB4:examples dezhaoli$
 
 ```
+
+Conclusion
+
+The xargparse offers a lot more than shown here. More details can refer to the example file.
+
 
 
 Install
