@@ -159,10 +159,11 @@ Make sure that GNU `bash`, at least version 5, is on your PATH. This script will
 not work unless this is that case. That means, when you type `bash` and press
 enter into your terminal something actually happens.
 
-For convenience, it is best to include `xargparse` on your path
-To include `xargparse` on your path:
+For convenience, it is best to include `xargparse` in your Bash Profiles
 
-    export PATH=$PATH:<path to xargparse>/xargparse
+To include `xargparse` in your Bash Profiles:
+
+    source <path to xargparse>/xargparse
 
 Include these lines in your `.bashrc` or `.zshrc`.
 
