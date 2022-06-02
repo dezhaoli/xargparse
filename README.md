@@ -160,6 +160,7 @@ not work unless this is that case. That means, when you type `bash` and press
 enter into your terminal something actually happens.
 
 For convenience, it is best to include `xargparse` in your Bash Profiles
+
 To include `xargparse` in your Bash Profiles:
 
     source <path to xargparse>/xargparse
