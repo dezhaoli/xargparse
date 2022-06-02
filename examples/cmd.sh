@@ -33,16 +33,15 @@ function simple_fun()
 function complicated_fun()
 {
     # set -x
-    local version="2.0.0"                       #@ -v;'--version';desc="option 1's description"
+    local version="2.0.0"                       #@ -v; --version ;desc="option 1's description"
     local is_force=false                        #@ '-f';action='store_true';desc="option 2's description"
-    local key=~                                 #@ "--key";action='';desc="option 3's description"
+    local key=~                                 #@ "--key"; desc="key's description"
 
-    local f_file_name=""         				#@ "file";  desc="f_file_name's description";
-    local path='/'         						#@  desc="path's description";
-    local ws="eeeee"         					#@ workspace; desc="ws's description";
-    local res_list=()							#@ "others"; nargs='+'; desc="f_file_name's description";
-    # ____
-    parse_args "$@"
+    local f_file_name=""                        #@ "file"; desc="f_file_name's description";
+    local path='/'                              #@ desc="path's description";
+    local ws="eeeee"                            #@ workspace; desc="ws's description";
+    local res_list=()                           #@ "others"; nargs='*'; desc="res_list's description";
+    ____ "$@"
 
     echo "version=$version"
     echo "is_force=$is_force"

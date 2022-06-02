@@ -187,7 +187,19 @@ function _usage_concise()
                     if [[ -n "$default" ]]; then
                         pos_str="[${pos:-$dest}... ($default)]"
                     else
+                        pos_str="${pos:-$dest}..."
+                    fi
+                elif [[ "$nargs" == '*' ]]; then
+                    if [[ -n "$default" ]]; then
+                        pos_str="[${pos:-$dest}... ($default)]"
+                    else
                         pos_str="[${pos:-$dest}...]"
+                    fi
+                elif [[ "$nargs" == '?' ]]; then
+                    if [[ -n "$default" ]]; then
+                        pos_str="[${pos:-$dest} ($default)]"
+                    else
+                        pos_str="[${pos:-$dest}]"
                     fi
                 else
                     if [[ -n "$default" ]]; then
@@ -364,6 +376,18 @@ function parse_args(){
                         pos_str="[${pos:-$dest}... ($default)]"
                     else
                         pos_str="${pos:-$dest}..."
+                    fi
+                elif [[ "$nargs" == '*' ]]; then
+                    if [[ -n "$default" ]]; then
+                        pos_str="[${pos:-$dest}... ($default)]"
+                    else
+                        pos_str="[${pos:-$dest}...]"
+                    fi
+                elif [[ "$nargs" == '?' ]]; then
+                    if [[ -n "$default" ]]; then
+                        pos_str="[${pos:-$dest} ($default)]"
+                    else
+                        pos_str="[${pos:-$dest}]"
                     fi
                 else
                     if [[ -n "$default" ]]; then
