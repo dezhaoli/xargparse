@@ -56,6 +56,84 @@ a=reset a's value
 b=reset b's value
 ```
 
+Let's take a more complicated example
+./examples/cmd.sh
+```shell
+#@ alia="rename_fun"; desc='Function Destcription.'; flag='*'
+function complicated_fun()
+{
+    # set -x
+    local version="2.0.0"                       #@ -v; --version ;desc="option 1's description"
+    local is_force=false                        #@ '-f';action='store_true';desc="option 2's description"
+    local key=~                                 #@ "--key"; desc="key's description"
+
+    local f_file_name=""                        #@ "file"; desc="f_file_name's description";
+    local path='/'                              #@ desc="path's description";
+    local ws="eeeee"                            #@ workspace; desc="ws's description";
+    local res_list=()                           #@ "others"; nargs='+'; desc="res_list's description";
+    ____ "$@"
+
+    echo "version=$version"
+    echo "is_force=$is_force"
+    echo "key=$key"
+    echo "file=$f_file_name"
+    echo "path=$path"
+    echo "ws=$ws"
+    for i in "${res_list[@]}" ; do echo "=>$i";done
+
+}
+```
+
+And now the output:
+
+```shell
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh
+usage: cmd.sh <command> [-h] [options] [positional arguments]
+command:
+    simple_fun [a] [b]
+  * rename_fun [-v|--version arg] [-f] [--key arg]  file [path] [workspace] [others...]  #Function Destcription.
+global options:
+    -b arg (dezhaoli)                                                                #set bundleid
+some extend message...
+DEZHAOLI-MB4:examples dezhaoli$
+DEZHAOLI-MB4:examples dezhaoli$
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh rename_fun
+usage: cmd.sh rename_fun [-h] [options] [positional arguments]
+options:
+    -v, --version arg (2.0.0)                                                        #option 1's description
+    -f (false)                                                                       #option 2's description
+    --key arg (/Users/dezhaoli)                                                      #key's description
+positional arguments:
+    file                                                                             #f_file_name's description
+    [path (/)]                                                                       #path's description
+    [workspace (eeeee)]                                                              #ws's description
+    [others...]                                                                      #res_list's description
+
+error: the following arguments are required: file
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh rename_fun a.apk
+version=2.0.0
+is_force=false
+key=/Users/dezhaoli
+file=a.apk
+path=/
+ws=eeeee
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh rename_fun a.apk /root/usr/
+version=2.0.0
+is_force=false
+key=/Users/dezhaoli
+file=a.apk
+path=/root/usr/
+ws=eeeee
+DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh rename_fun a.apk /root/usr/ apks
+version=2.0.0
+is_force=false
+key=/Users/dezhaoli
+file=a.apk
+path=/root/usr/
+ws=apks
+DEZHAOLI-MB4:examples dezhaoli$
+
+```
 
 
 Install
