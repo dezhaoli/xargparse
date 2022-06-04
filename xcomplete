@@ -1,0 +1,164 @@
+#!/usr/bin/env -S bash
+###########################################################
+# @Author: dezhaoli@tencent.com
+# @Date:   
+# Please contact dezhaoli if you have any questions.
+###########################################################
+
+
+# Copyright 2009, The Android Open Source Project
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#   http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+###########################################################
+
+
+function have()
+{
+    unset -v have
+    PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin type $1 &>/dev/null &&
+    have=true
+}
+
+function _xcomplete()
+{
+    local cur prev words cword
+
+
+    if have _get_comp_words_by_ref>/dev/null; then
+        _get_comp_words_by_ref -n : cur prev words cword
+    else
+        words=( "${COMP_WORDS[@]}" )
+        cword=${#COMP_WORDS[@]}
+        cur="${COMP_WORDS[COMP_CWORD]}"
+        prev="${COMP_WORDS[COMP_CWORD-1]}"
+        _filedir()
+        {
+            local IFS=$'\n' 
+            toks=( $(
+                compgen -d -- "$cur" | {
+                    while read -r tmp; do
+                        printf '%s\n' $tmp
+                    done
+                }
+            ))
+            COMPREPLY=( "${COMPREPLY[@]}" "${toks[@]}" )
+        }
+
+    fi
+
+        # echo "words=[${words[*]}]" >&2
+        # echo "cword=[$cword]" >&2
+        # echo "cur=[$cur]" >&2
+        # echo "prev=[$prev]" >&2
+
+    COMPREPLY=()
+
+    local cmd_path="$(which "${words[0]}")"
+    local sub_cmd=
+    local sub_cmd_list=()
+    local sub_cmd_opts=()
+    function parse_sub_cmd_list()
+    {
+        sub_cmd_list=()
+        while read line; do
+            # echo "==>[$line]"
+            eval ${XARGPARES_Class_Function_Signature}
+            eval $line
+            
+            local sub_cmd="${alia:-$func}"
+            if [[ -n "$sub_cmd" ]]; then
+                sub_cmd_list+=( "$sub_cmd" )
+            fi
+        
+        done< <(< "$cmd_path" sed  -nE "
+        H
+        x
+        /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+            s//func=\2;\1/
+            p
+        } 
+        ")
+    }
+    function parse_sub_cmd_opt()
+    {
+        while read line; do
+            eval ${XARGPARES_Class_Function_Body}
+            if [[ -n "$line" ]]; then
+                eval $line
+            fi
+            
+            if [[ -n "$short" || -n "$long" ]]; then
+                sub_cmd_opts+=( "${short}" "${long}" )
+            fi
+
+        done< <(< "$cmd_path" sed  -nE "
+        /^function $sub_cmd\(\)/,/^}/ { 
+            ${XARGPARES_REGEXP_SECTION2}
+        }")
+
+    }
+
+    # case 0 sub_cmd; 0 sub_args;
+    if (( cword <= 2 )); then
+        parse_sub_cmd_list
+        COMPREPLY=( $( compgen -W "${sub_cmd_list[*]}" -- "${cur#*:}" ) )
+        return 0
+    fi
+
+
+
+    parse_sub_cmd_list
+    sub_cmd="${words[1]}"
+
+    parse_sub_cmd_opt
+
+
+    for ((i=2; i < $cword; i++)); do
+        case ${words[$i]} in
+            -*)
+                # this is an option
+                ;;
+            *)
+                # others, just do filename completion
+                _filedir
+                return 0
+                ;;
+        esac
+    done
+
+    if [[ "$cur" == -* ]]; then
+        # standard options
+        COMPREPLY=( $( compgen -W "${sub_cmd_opts[*]}" -- "$cur" ) )
+    else
+        _filedir 
+    fi
+    
+    # set +x
+    return 0
+}
+
+
+
+
+
+function _init()
+{
+    local dir="$(dirname "$BASH_SOURCE")/bash_completion.d"
+    source "$(dirname "$BASH_SOURCE")/xargparse"
+
+    while read line; do
+        complete -F _xcomplete "$line"
+    done < <( ls -1 "$dir" )
+}
+
+_init
