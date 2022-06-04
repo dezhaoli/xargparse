@@ -146,12 +146,17 @@ Get the script:
 
  *  OS X: Use [Homebrew][2].
 
-         brew install xargparse
+	```shell
+        brew tap dezhaoli/d
+        brew install xargparse
+	```
 
     If you need to install the latest development version
-
+    
+	```shell
         brew unlink xargparse
         brew install --HEAD xargparse
+	```
 
  * Others: Download the `xargparse` and place it on your PATH.
  
