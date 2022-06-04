@@ -19,6 +19,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+###########################################################
 
 
 
@@ -86,6 +87,12 @@ XARGPARES_Class_Function_Body="
     nargs=
     desc=
 "
+
+readonly \
+        XARGPARES_REGEXP_SECTION2 \
+        XARGPARES_REGEXP_SECTION5 \
+        BASH_COMPLETION_COMPAT_DIR \
+        XARGPARES_Class_Function_Body
 
 function _class_to_string()
 {
@@ -570,6 +577,12 @@ function main()
         exit 0
     fi
 
+    # install bash-complete
+    if [[ ${#args[@]} == 1 && "${args[0]}" == '____' ]]; then
+        touch "$(dirname "$BASH_SOURCE")/bash_completion.d/$(basename "$0")"
+        (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
+    fi
+
     # find the real sub command function
     {
         # local args=("$@")
@@ -598,7 +611,7 @@ function main()
 
 }
 
-if [[ "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
+if [[ ! "$0" =~ ^-.* && "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
 
     echo "$(basename "$0") 1.0.1"
     _usage_concise
