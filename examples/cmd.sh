@@ -7,9 +7,9 @@
 
 cd $(dirname $0)
 
-# . "$(which xargparse)"
-. ../xargparse
 
+# . ../xargparse
+[[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
 
 
 # XARGPARES_DEBUG=true
