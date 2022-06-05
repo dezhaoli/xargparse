@@ -24,18 +24,14 @@
 
 function _xcomplete()
 {
-    local cur prev words cword
-
-    function _have()
-    {
-        unset -v _have
-        PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin type $1 &>/dev/null &&
-        _have=true
-    }
+    local cur prev words cword i
 
 
-    if _have _get_comp_words_by_ref>/dev/null; then
+
+
+    if [[ -n "$BASH_COMPLETION" ]]; then
         _get_comp_words_by_ref -n : cur prev words cword
+        i=1
     else
         words=( "${COMP_WORDS[@]}" )
         cword=${#COMP_WORDS[@]}
@@ -53,10 +49,12 @@ function _xcomplete()
             ))
             COMPREPLY=( "${COMPREPLY[@]}" "${toks[@]}" )
         }
+        i=2
 
     fi
 
         echo "words=[${words[*]}]" >&2
+        echo "i=[$i]" >&2
         echo "cword=[$cword]" >&2
         echo "cur=[$cur]" >&2
         echo "prev=[$prev]" >&2
@@ -109,7 +107,7 @@ function _xcomplete()
     }
 
     # case 0 sub_cmd; 0 sub_args;
-    if (( cword <= 2 )); then
+    if (( cword <= i )); then
         parse_sub_cmd_list
         COMPREPLY=( $( compgen -W "${sub_cmd_list[*]}" -- "${cur#*:}" ) )
         return 0
@@ -123,7 +121,7 @@ function _xcomplete()
     parse_sub_cmd_opt
 
 
-    for ((i=2; i < $cword; i++)); do
+    for ((; i < $cword; i++)); do
         case ${words[$i]} in
             -*)
                 # this is an option
