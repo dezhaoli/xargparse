@@ -87,12 +87,23 @@ XARGPARES_Class_Function_Body="
     nargs=
     desc=
 "
-
+set -x
 readonly \
         XARGPARES_REGEXP_SECTION2 \
         XARGPARES_REGEXP_SECTION5 \
-        BASH_COMPLETION_COMPAT_DIR \
+        XARGPARES_Class_Function_Signature \
         XARGPARES_Class_Function_Body
+
+function _unset_xargparse_defines()
+{
+    unset -f have
+    unset \
+        XARGPARES_REGEXP_SECTION2 \
+        XARGPARES_REGEXP_SECTION5 \
+        XARGPARES_Class_Function_Signature \
+        XARGPARES_Class_Function_Body
+
+}
 
 function _class_to_string()
 {
