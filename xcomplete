@@ -155,7 +155,7 @@ function _init()
 {
     local dir=~/".xargparse/bash_completion.d"
     mkdir -p "$dir"
-    source "$(dirname "$BASH_SOURCE")/xargparse"
+    source "$(dirname "$(realpath "$BASH_SOURCE")")/xargparse"
 
     while read line; do
         complete -F _xcomplete "$line"
