@@ -94,17 +94,17 @@ readonly \
         XARGPARES_Class_Function_Signature \
         XARGPARES_Class_Function_Body
 
-function _unset_xargparse_defines()
-{
-    unset -f have
-    unset \
-        XARGPARES_VERSION \
-        XARGPARES_REGEXP_SECTION2 \
-        XARGPARES_REGEXP_SECTION5 \
-        XARGPARES_Class_Function_Signature \
-        XARGPARES_Class_Function_Body
+# function _unset_xargparse_defines()
+# {
+#     unset -f have
+#     unset \
+#         XARGPARES_VERSION \
+#         XARGPARES_REGEXP_SECTION2 \
+#         XARGPARES_REGEXP_SECTION5 \
+#         XARGPARES_Class_Function_Signature \
+#         XARGPARES_Class_Function_Body
 
-}
+# }
 
 function _class_to_string()
 {
@@ -118,35 +118,6 @@ function _print_usage()
     # echo "[${column_1}] [${column_2}]"
     printf "%3s %s%-80s %s \n" "${column_0}" "" "${column_1}" "${column_2:+#}${column_2}"
 }
-
-# function _print_usages()
-# {
-#     echo "Usage: $(basename $0) <command> [options] [positional arguments]"
-#     echo "$1" | sed -E 's/[[:space:]]*(\*?)[[:space:]]*(.*[^[:space:]])[[:space:]]*#?(.*)/\1#\2#\3/' | while read line; do
-        
-#         local c=${line#*#}
-#         c=${c%#*}
-#         if [[ "$line" =~ ^\s*$ ]]; then
-#             # echo "[$line]1"
-#             echo ""
-#         elif [[ "$line" =~ ":#" ]]; then
-#             # echo "[$line]2"
-#             echo "$c"
-#         elif [[ "$line" =~ ^.*#.*#.*$ ]]; then
-#             # echo "[$line]3"
-#             _print_usage "$c" "${line##*#}" "${line%%#*}"
-#         elif [[ "$line" =~ ^.*#.*$ ]]; then
-#             _print_usage "" "$line"
-#         else
-#             _print_usage "$line"
-#         fi
-#     done
-# }
-
-# function _usage_verbose()
-# {
-    
-# }
 
 #@
 function _usage_concise()

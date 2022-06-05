@@ -56,10 +56,10 @@ function _xcomplete()
 
     fi
 
-        # echo "words=[${words[*]}]" >&2
-        # echo "cword=[$cword]" >&2
-        # echo "cur=[$cur]" >&2
-        # echo "prev=[$prev]" >&2
+        echo "words=[${words[*]}]" >&2
+        echo "cword=[$cword]" >&2
+        echo "cur=[$cur]" >&2
+        echo "prev=[$prev]" >&2
 
     COMPREPLY=()
 
