@@ -87,7 +87,6 @@ XARGPARES_Class_Function_Body="
     nargs=
     desc=
 "
-set -x
 readonly \
         XARGPARES_VERSION \
         XARGPARES_REGEXP_SECTION2 \
