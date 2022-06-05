@@ -160,16 +160,19 @@ Get the script:
 
  * Others: Download the `xargparse` and place it on your PATH.
  
-Make sure that GNU `bash`, at least version 5, is on your PATH. This script will
-not work unless this is that case. That means, when you type `bash` and press
-enter into your terminal something actually happens.
+Make sure that GNU `bash`, at least version 4, is on your PATH. This script will
+not work unless this is that case. 
 
-For convenience, it is best to include `xargparse` in your Bash Profiles
+add the following code to your script:
 
-To include `xargparse` in your Bash Profiles:
+    [[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
 
-    source <path to xargparse>/xargparse
+Code Completion
+-------
 
-Include these lines in your `.bashrc` or `.zshrc`.
+If you have bash-completion installed, that automatically enables code completion. 
+Otherwise, just add the following code to /etc/bashrc or ~/.bash_profile or ~/.bashrc
+to enables code completion
 
-*Note:* `<path to xargparse>` should be absolute and not relative.
+    [[ -r "/opt/homebrew/opt/xargparse/bin/xcomplete" ]] && . "/opt/homebrew/opt/xargparse/bin/xcomplete"
+
