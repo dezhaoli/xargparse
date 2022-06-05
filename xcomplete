@@ -28,11 +28,12 @@ function _xcomplete()
 
 
 
-
+    # case: bash-completion installed 
     if [[ -n "$BASH_COMPLETION" ]]; then
         _get_comp_words_by_ref -n : cur prev words cword
         i=1
     else
+    # case: bash-completion NOT installed 
         words=( "${COMP_WORDS[@]}" )
         cword=${#COMP_WORDS[@]}
         cur="${COMP_WORDS[COMP_CWORD]}"
@@ -53,11 +54,11 @@ function _xcomplete()
 
     fi
 
-        echo "words=[${words[*]}]" >&2
-        echo "i=[$i]" >&2
-        echo "cword=[$cword]" >&2
-        echo "cur=[$cur]" >&2
-        echo "prev=[$prev]" >&2
+        # echo "words=[${words[*]}]" >&2
+        # echo "i=[$i]" >&2
+        # echo "cword=[$cword]" >&2
+        # echo "cur=[$cur]" >&2
+        # echo "prev=[$prev]" >&2
 
     COMPREPLY=()
 
