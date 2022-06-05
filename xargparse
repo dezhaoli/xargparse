@@ -579,8 +579,9 @@ function main()
 
     # install bash-complete
     if [[ ${#args[@]} == 1 && "${args[0]}" == '____' ]]; then
-        touch "$(dirname "$BASH_SOURCE")/bash_completion.d/$(basename "$0")"
+        touch ~/".xargparse/bash_completion.d/$(basename "$0")"
         (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
+
     fi
 
     # find the real sub command function

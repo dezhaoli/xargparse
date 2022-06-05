@@ -22,19 +22,19 @@
 ###########################################################
 
 
-function have()
-{
-    unset -v have
-    PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin type $1 &>/dev/null &&
-    have=true
-}
-
 function _xcomplete()
 {
     local cur prev words cword
 
+    function _have()
+    {
+        unset -v _have
+        PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin type $1 &>/dev/null &&
+        _have=true
+    }
 
-    if have _get_comp_words_by_ref>/dev/null; then
+
+    if _have _get_comp_words_by_ref>/dev/null; then
         _get_comp_words_by_ref -n : cur prev words cword
     else
         words=( "${COMP_WORDS[@]}" )
