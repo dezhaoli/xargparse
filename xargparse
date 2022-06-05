@@ -34,7 +34,7 @@
 # XARGPARES_USE_BASH_ARGV
 
 
-
+XARGPARES_VERSION=1.0.1
 
 
 XARGPARES_REGEXP_SECTION2="
@@ -89,6 +89,7 @@ XARGPARES_Class_Function_Body="
 "
 set -x
 readonly \
+        XARGPARES_VERSION \
         XARGPARES_REGEXP_SECTION2 \
         XARGPARES_REGEXP_SECTION5 \
         XARGPARES_Class_Function_Signature \
@@ -98,6 +99,7 @@ function _unset_xargparse_defines()
 {
     unset -f have
     unset \
+        XARGPARES_VERSION \
         XARGPARES_REGEXP_SECTION2 \
         XARGPARES_REGEXP_SECTION5 \
         XARGPARES_Class_Function_Signature \
@@ -625,7 +627,7 @@ function main()
 
 if [[ ! "$0" =~ ^-.* && "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
 
-    echo "$(basename "$0") 1.0.1"
+    echo "$(basename "$0") $XARGPARES_VERSION"
     _usage_concise
 fi
 

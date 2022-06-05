@@ -162,4 +162,6 @@ function _init()
     done < <( ls -1 "$dir" )
 }
 
-_init
+if [[ -z "$XARGPARES_VERSION" ]]; then
+    _init
+fi
