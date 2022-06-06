@@ -481,16 +481,15 @@ ${poss_str:+"positional arguments:"}${poss_str}
         local line=
         reset_arg
         if [[ "${x_i_x}" =~ ^-[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then
-            aaaa=
             line="${s_optspecs["${x_i_x}"]}"
         elif [[ "${x_i_x}" =~ ^--[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then
-            bbbb=
             line="${l_optspecs["${x_i_x}"]}"
         else
             ((p_index < ${#p_argspecs[@]})) || _die "unrecognized arguments: ${x_i_x}"
             line="${p_argspecs[$p_index]}"
             ((p_index++))
         fi
+        ${XARGPARES_DEBUG:-false} && echo "set line=[$line]"
         parse_line || _die "argument ${x_i_x}: missing definition"
 
         if [[ "$action" =~ store_.* ]];then
@@ -500,7 +499,7 @@ ${poss_str:+"positional arguments:"}${poss_str}
             if [[ "$nargs" == '+' || "$nargs" == '*' ]]; then
                 eval "$dest+=( \"${x_i_x}\" )"
                 while (( "$#" )); do
-                    i="$1"
+                    x_i_x="$1"
                     if [[ "${x_i_x}" =~ ^--?[-a-zA-Z0-9_]*$ ]]; then
                         break
                     fi
@@ -512,7 +511,8 @@ ${poss_str:+"positional arguments:"}${poss_str}
             fi
         else
             (($#)) || _die "argument ${x_i_x}: expected one argument"
-            printf -v "$dest" "%s" "$1"
+            x_i_x="$1"
+            printf -v "$dest" "%s" "$x_i_x"
             shift
         fi
     done
@@ -553,9 +553,9 @@ function main()
                 command -v "$func" >/dev/null 2>&1 || { echo "the function[$func] pointed to by alia[$alia] was not found" >&2 ; exit 1; }
 
                 args=("$func" "${args[@]}")
-                # echo "before: args=${args[*]}" 
+                ${XARGPARES_DEBUG:-false} &&  echo "before: args=${args[*]}" 
                 "${args[@]}"
-                # echo "after: args=${args[@]}"
+                ${XARGPARES_DEBUG:-false} &&  echo "after: args=${args[@]}"
             fi
     
         done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
