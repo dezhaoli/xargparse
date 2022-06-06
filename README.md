@@ -31,27 +31,26 @@ All you need to do is:
 
 Here is an example of the output when running from the ./examples/cmd.sh:
 ```shell
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh
+$ ./cmd.sh
 usage: cmd.sh <command> [-h] [options] [positional arguments]
 command:
     simple_fun [a] [b]
-DEZHAOLI-MB4:examples dezhaoli$
-DEZHAOLI-MB4:examples dezhaoli$
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh simple_fun -h
+$
+$ ./cmd.sh simple_fun -h
 usage: cmd.sh rename_fun [-h] [options] [positional arguments]
 
 positional arguments:
     [a (A)]                                                                          #set a
     [b (B)]                                                                          #set b
 
-DEZHAOLI-MB4:examples dezhaoli$
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh simple_fun
+$
+$ ./cmd.sh simple_fun
 a=A
 b=B
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh simple_fun "reset a's value"
+$ ./cmd.sh simple_fun "reset a's value"
 a=reset a's value
 b=B
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh simple_fun "reset a's value" "reset b's value"
+$ ./cmd.sh simple_fun "reset a's value" "reset b's value"
 a=reset a's value
 b=reset b's value
 ```
@@ -88,14 +87,13 @@ function complicated_fun()
 And now the output:
 
 ```shell
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh
+$ ./cmd.sh
 usage: cmd.sh <command> [-h] [options] [positional arguments]
 command:
     simple_fun [a] [b]
   * rename_fun [-v|--version arg] [-f] [--key arg]  file [path] [workspace] [others...]  #Function Destcription.
-DEZHAOLI-MB4:examples dezhaoli$
-DEZHAOLI-MB4:examples dezhaoli$
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh rename_fun
+$
+$ ./cmd.sh rename_fun
 usage: cmd.sh rename_fun [-h] [options] [positional arguments]
 options:
     -v, --version arg (2.0.0)                                                        #option 1's description
@@ -108,28 +106,27 @@ positional arguments:
     [others...]                                                                      #res_list's description
 
 error: the following arguments are required: file
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh rename_fun a.apk
+$ ./cmd.sh rename_fun a.apk
 version=2.0.0
 is_force=false
 key=/Users/dezhaoli
 file=a.apk
 path=/
 ws=eeeee
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh rename_fun a.apk /root/usr/
+$ ./cmd.sh rename_fun a.apk /root/usr/
 version=2.0.0
 is_force=false
 key=/Users/dezhaoli
 file=a.apk
 path=/root/usr/
 ws=eeeee
-DEZHAOLI-MB4:examples dezhaoli$ ./cmd.sh rename_fun a.apk /root/usr/ apks
+$ ./cmd.sh rename_fun a.apk /root/usr/ apks
 version=2.0.0
 is_force=false
 key=/Users/dezhaoli
 file=a.apk
 path=/root/usr/
 ws=apks
-DEZHAOLI-MB4:examples dezhaoli$
 
 ```
 
