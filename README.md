@@ -1,9 +1,11 @@
 xargparse
 =======
 
-Parser for command-line options, arguments and sub-commands
+Parser for command-line options, arguments and sub-commands. auto create command completions for the Bash shell.
 
 The `xargparse` makes it easy to write user-friendly command-line interfaces like what `argparse` does for python. The program defines what arguments it requires, and xargparse will figure out how to parse those out of BASH_ARGV. The `xargparse` also automatically generates help and usage messages and issues errors when users give the program invalid arguments.
+
+![auto_completion_demo](https://user-images.githubusercontent.com/23163073/172112615-93d69969-041c-45ce-9515-66cee4fe2d0e.gif)
 
 
 Example
@@ -30,30 +32,8 @@ All you need to do is:
 3. add `____ #@` after all the parameters
 
 Here is an example of the output when running from the ./examples/cmd.sh:
-```shell
-$ ./cmd.sh
-usage: cmd.sh <command> [-h] [options] [positional arguments]
-command:
-    simple_fun [a] [b]
-$
-$ ./cmd.sh simple_fun -h
-usage: cmd.sh rename_fun [-h] [options] [positional arguments]
+![simple_arg_parse_demo](https://user-images.githubusercontent.com/23163073/172113718-79d5c378-08ea-4fcb-94be-69f4e6e554b8.gif)
 
-positional arguments:
-    [a (A)]                                                                          #set a
-    [b (B)]                                                                          #set b
-
-$
-$ ./cmd.sh simple_fun
-a=A
-b=B
-$ ./cmd.sh simple_fun "reset a's value"
-a=reset a's value
-b=B
-$ ./cmd.sh simple_fun "reset a's value" "reset b's value"
-a=reset a's value
-b=reset b's value
-```
 
 Let's take a more complicated example
 
