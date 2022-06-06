@@ -52,6 +52,16 @@ function complicated_fun()
     for i in "${res_list[@]}" ; do echo "=>$i";done
 
 }
+#@
+function auto_completion_1()
+{
+	echo "auto_completion_1 called!"
+}
+#@
+function auto_completion_2()
+{
+	echo "auto_completion_2 called!"
+}
 
 ##@@ alia='main-ex'; func='android-parse-args'; desc='global options:'
 function android-parse-args()
