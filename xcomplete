@@ -148,8 +148,6 @@ function _xcomplete()
 
 
 
-
-
 function _init()
 {
     local dir=~/".xargparse/bash_completion.d"

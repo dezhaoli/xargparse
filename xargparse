@@ -26,15 +26,13 @@
 
 
 
-
-
 # : ${XARGPARES_DEBUG:=false}
 # XARGPARES_MAIN_EX_NAME='main-ex'
 # XARGPARES_LABEL_NAME='label'
 # XARGPARES_USE_BASH_ARGV
 
 
-XARGPARES_VERSION=1.1.0
+XARGPARES_VERSION=1.1.1
 
 
 XARGPARES_REGEXP_SECTION2="
@@ -106,24 +104,36 @@ readonly \
 
 # }
 
-function _class_to_string()
+function _xargparse_cmd_src()
+{
+    : ${XARGPARES_CMD_SRC:="$0"}
+    if [[ -r "$XARGPARES_CMD_SRC" ]]; then
+        XARGPARES_CMD_SRC="$(realpath "$XARGPARES_CMD_SRC")"   # convert to absolute path
+    else
+        echo -e "error: target cmd [$XARGPARES_CMD_SRC] not found" >&2
+        exit 1
+    fi
+}
+
+function _xargparse_class_to_string()
 {
     local class="$1"
     eval echo $(echo $class |sed -nE '/([a-z]+)=/s//\1=\"\$\1;\"/gp')
 }
 
-function _print_usage()
+function _xargparse_print_usage()
 {
     { local column_1="$1" column_2="$2" column_0="$3" ;}
     # echo "[${column_1}] [${column_2}]"
     printf "%3s %s%-80s %s \n" "${column_0}" "" "${column_1}" "${column_2:+#}${column_2}"
 }
 
-#@
-function _usage_concise()
+
+function _xargparse_usage_concise()
 {
     shopt -qo xtrace && set +x && local XTRACE=true
-    echo -e "usage: $(basename $0) <command> [-h] [options] [positional arguments]\ncommand:"
+    _xargparse_cmd_src
+    echo -e "usage: $(basename $XARGPARES_CMD_SRC) <command> [-h] [options] [positional arguments]\ncommand:"
  # set -x
     local line=
 
@@ -155,7 +165,7 @@ function _usage_concise()
     {
         if $is_last; then
             is_last=false
-            _print_usage "${last_func}${opts_str:+ }${opts_str}${poss_str:+ }${poss_str}" "$last_desc" "$last_flag"
+            _xargparse_print_usage "${last_func}${opts_str:+ }${opts_str}${poss_str:+ }${poss_str}" "$last_desc" "$last_flag"
         fi
     }
 
@@ -164,7 +174,7 @@ function _usage_concise()
         reset_arg
         eval $line
         if ((section==1)); then
-            ${XARGPARES_DEBUG:-false} && _class_to_string "$XARGPARES_Class_Function_Signature"
+            ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Signature"
             print_last
             is_last=true
             last_func="${alia:-$func}"
@@ -174,7 +184,7 @@ function _usage_concise()
             poss_str=
             
         elif ((section==2)); then
-            ${XARGPARES_DEBUG:-false} && _class_to_string "$XARGPARES_Class_Function_Body"
+            ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
             local opt_str=
             local pos_str=
             if [[ -n "$short" && -n "$long" ]]; then
@@ -236,7 +246,7 @@ function _usage_concise()
             echo "$desc"
 
         elif ((section==5)); then
-            ${XARGPARES_DEBUG:-false} && eval _class_to_string "$XARGPARES_Class_Function_Body"
+            ${XARGPARES_DEBUG:-false} && eval _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
 
             local opt_str=
             if [[ -n "$short" && -n "$long" ]]; then
@@ -254,14 +264,14 @@ function _usage_concise()
                     opt_str="$opt_str ($default)"
                 fi
 
-                _print_usage "$opt_str" "$desc"
+                _xargparse_print_usage "$opt_str" "$desc"
             fi
             
         else
             echo "error: line=[$line]" >&2
             exit 1
         fi
-    done< <(< "$0" sed  -nE "
+    done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
     H
     /^##@@[[:space:]]*(alia='label'.*)/ {
         s//section=3;\1/
@@ -325,6 +335,7 @@ function ____()
 #@ desc="parse bash arguages, like getops"
 function parse_args(){
     shopt -qo xtrace && set +x && local XTRACE=true
+    _xargparse_cmd_src
 
     local func=""
     for func in "${FUNCNAME[@]}"; do
@@ -363,7 +374,7 @@ function parse_args(){
             ${XARGPARES_DEBUG:-false} &&  echo "##line=[$line]"
             reset_arg
             parse_line
-            ${XARGPARES_DEBUG:-false} && eval _class_to_string "$XARGPARES_Class_Function_Body"
+            ${XARGPARES_DEBUG:-false} && eval _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
 
             local opt_str=
             local pos_str=
@@ -382,7 +393,7 @@ function parse_args(){
                     opt_str="$opt_str ($default)"
                 fi
 
-                opts_str="$opts_str\n$(_print_usage "$opt_str" "$desc")"
+                opts_str="$opts_str\n$(_xargparse_print_usage "$opt_str" "$desc")"
             else
                 if [[ "$nargs" == '+' ]]; then
                     if [[ -n "$default" ]]; then
@@ -410,17 +421,17 @@ function parse_args(){
                     fi
                 fi
                 
-                poss_str="$poss_str\n$(_print_usage "$pos_str" "$desc")"
+                poss_str="$poss_str\n$(_xargparse_print_usage "$pos_str" "$desc")"
                 
             fi
 
 
-        done< <(< "$0" sed  -nE "
+        done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
         /^function $func\(\)/,/^}/ { 
             ${XARGPARES_REGEXP_SECTION2}
         }")
 
-        echo -e "usage: $(basename $0) ${alia:-$func} [-h] [options] [positional arguments] 
+        echo -e "usage: $(basename $XARGPARES_CMD_SRC) ${alia:-$func} [-h] [options] [positional arguments] 
 ${opts_str:+"options:"}${opts_str}
 ${poss_str:+"positional arguments:"}${poss_str}
 "
@@ -444,14 +455,14 @@ ${poss_str:+"positional arguments:"}${poss_str}
         ${XARGPARES_DEBUG:-false} && echo "#line=[$line]"
         reset_arg
         parse_line
-        ${XARGPARES_DEBUG:-false} && _class_to_string "$XARGPARES_Class_Function_Body"
+        ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
 
         [[ -z "$short" && -z "$long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
         [[ -n "$short" ]] && s_optspecs["$short"]="$line"
         [[ -n "$long" ]] && l_optspecs["$long"]="$line"
 
 
-    done< <(< "$0" sed  -nE "
+    done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
     /^function $func\(\)/,/^}/ { 
         ${XARGPARES_REGEXP_SECTION2}
     }")
@@ -526,6 +537,7 @@ ${poss_str:+"positional arguments:"}${poss_str}
 function main()
 {
     shopt -qo xtrace && set +x && local XTRACE=true
+    _xargparse_cmd_src
 
     XARGPARES_USE_BASH_ARGV=false
     eval local ${XARGPARES_Class_Function_Signature}
@@ -538,7 +550,7 @@ function main()
             eval ${XARGPARES_Class_Function_Signature}
             eval $line
             if [[ "main-ex" == "$alia" && -n "$func" ]]; then
-                command -v "$func" >/dev/null 2>&1 || _die "the function[$func] pointed to by alia[$alia] was not found"
+                command -v "$func" >/dev/null 2>&1 || { echo "the function[$func] pointed to by alia[$alia] was not found" >&2 ; exit 1; }
 
                 args=("$func" "${args[@]}")
                 # echo "before: args=${args[*]}" 
@@ -546,7 +558,7 @@ function main()
                 # echo "after: args=${args[@]}"
             fi
     
-        done< <(< "$0" sed  -nE "
+        done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
         /^##@@[[:space:]]*(.*)/ {
             s//\1/
             p
@@ -556,13 +568,13 @@ function main()
 
     # show usage
     if (( ${#args[@]} == 0 )); then
-        _usage_concise >&2
+        _xargparse_usage_concise >&2
         exit 0
     fi
 
     # install bash-complete
     if [[ ${#args[@]} == 1 && "${args[0]}" == '____' ]]; then
-        touch ~/".xargparse/bash_completion.d/$(basename "$0")"
+        touch ~/".xargparse/bash_completion.d/$(basename "$XARGPARES_CMD_SRC")"
         (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
 
     fi
@@ -578,7 +590,7 @@ function main()
                 args[0]="$func"
             fi
     
-        done< <(< "$0" sed  -nE "
+        done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
         H
         x
         /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
@@ -595,9 +607,10 @@ function main()
 
 }
 
-if [[ ! "$0" =~ ^-.* && "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
-
+# call ourself
+if [[ ! "$0" =~ ^-.* &&  # case call from -bash
+    "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
     echo "$(basename "$0") $XARGPARES_VERSION"
-    _usage_concise
+    _xargparse_usage_concise
 fi
 

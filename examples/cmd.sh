@@ -4,12 +4,12 @@
 # @Date:   
 # Please contact dezhaoli if you have any questions.
 ###########################################################
-
+XARGPARES_CMD_SRC="$(realpath $0)"
 cd $(dirname $0)
 
 
-# . ../xargparse
-[[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
+. ../xargparse
+# [[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
 
 
 # XARGPARES_DEBUG=true
