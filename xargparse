@@ -319,7 +319,7 @@ function ____()
         while (( i - offset > 0 )); do
             local arg="${BASH_ARGV[i - 1 - $offset]}"
             ((i=i-1))
-            if [[ " ${IGNORE_BASH_ARGV[*]} " =~ " $arg " ]]; then # TODO: remove this ugly code
+            if [[ " ${XARGPARES_IGNORE_BASH_ARGV[*]} " =~ " $arg " ]]; then # TODO: remove this ugly code
                 continue
             fi
             args[${#args[@]}]="$arg"
