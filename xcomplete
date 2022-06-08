@@ -115,34 +115,19 @@ function _xcomplete()
     fi
 
 
-
-    parse_sub_cmd_list
+    # case 1 sub_cmd; 
     sub_cmd="${words[1]}"
 
     parse_sub_cmd_opt
 
-
-    for ((; i < $cword; i++)); do
-        case ${words[$i]} in
-            -*)
-                # this is an option
-                ;;
-            *)
-                # others, just do filename completion
-                _filedir
-                return 0
-                ;;
-        esac
-    done
-
-    if [[ "$cur" == -* ]]; then
+    if [[ "$cur" =~ -.* ]]; then
         # standard options
         COMPREPLY=( $( compgen -W "${sub_cmd_opts[*]}" -- "$cur" ) )
     else
         _filedir 
     fi
     
-    # set +x
+    
     return 0
 }
 
