@@ -52,6 +52,20 @@ function complicated_fun()
     for i in "${res_list[@]}" ; do echo "=>$i";done
 
 }
+
+#@
+function choices_fun()
+{
+	local mode=''			#@ -m; choices=('release' 'debug');desc='choice mode'
+	local fruit=''			#@ choices=( apple orange banana );desc='choice fruit'
+    ____ "$@"
+
+
+    
+    echo "mode=$mode"
+    echo "fruit=$fruit"
+}
+
 #@
 function auto_completion_1()
 {

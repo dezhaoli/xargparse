@@ -82,6 +82,7 @@ XARGPARES_Class_Function_Body="
     short=
     long=
     action=
+    choices=()
     nargs=
     desc=
 "
@@ -118,7 +119,7 @@ function _xargparse_cmd_src()
 function _xargparse_class_to_string()
 {
     local class="$1"
-    eval echo $(echo $class |sed -nE '/([a-z]+)=/s//\1=\"\$\1;\"/gp')
+    eval echo $(echo "$class" |sed -nE '/([a-z]+)=/s//\1=\"\$\1;\"/g ; /([a-z]+)=.*\(\)/s//\1=\"\(\$\{\1\[\*\]\}\);\"/g;p')
 }
 
 function _xargparse_print_usage()
@@ -153,7 +154,7 @@ function _xargparse_usage_concise()
 
     
     eval local ${XARGPARES_Class_Function_Body}
-    function reset_arg()
+    function _reset_arg()
     {
         section=
 
@@ -171,7 +172,7 @@ function _xargparse_usage_concise()
 
     while read line; do
         ${XARGPARES_DEBUG:-false} && echo "###line=[$line]"
-        reset_arg
+        _reset_arg
         eval $line
         if ((section==1)); then
             ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Signature"
@@ -246,7 +247,7 @@ function _xargparse_usage_concise()
             echo "$desc"
 
         elif ((section==5)); then
-            ${XARGPARES_DEBUG:-false} && eval _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
+            ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
 
             local opt_str=
             if [[ -n "$short" && -n "$long" ]]; then
@@ -353,11 +354,11 @@ function parse_args(){
 
     eval local ${XARGPARES_Class_Function_Body}
 
-    function reset_arg()
+    function _reset_arg()
     {
         eval ${XARGPARES_Class_Function_Body}
     }
-    function parse_line()
+    function _parse_line()
     {
         if [[ -z "$line" ]]; then
             return 1
@@ -365,19 +366,21 @@ function parse_args(){
         eval $line
     }
 
-    function func_usage()
+
+    function _func_usage()
     {
 
         local opts_str=
         local poss_str=
         while read line; do
             ${XARGPARES_DEBUG:-false} &&  echo "##line=[$line]"
-            reset_arg
-            parse_line
-            ${XARGPARES_DEBUG:-false} && eval _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
+            _reset_arg
+            _parse_line
+            ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
 
             local opt_str=
             local pos_str=
+            local choices_str="${choices:+ }{${choices[*]}}"
             if [[ -n "$short" && -n "$long" ]]; then
                 opt_str="${short}, ${long}"
             elif [[ -n "$short" ]]; then
@@ -387,7 +390,9 @@ function parse_args(){
             fi
             if [[ -n "$opt_str" ]]; then
                 if [[ ! "$action" =~ store_.* ]]; then
-                    opt_str="$opt_str arg"
+                    opt_str="$opt_str arg${choices_str}"
+                else
+                    opt_str="${opt_str}"
                 fi
                 if [[ -n "$default" ]]; then
                     opt_str="$opt_str ($default)"
@@ -397,27 +402,27 @@ function parse_args(){
             else
                 if [[ "$nargs" == '+' ]]; then
                     if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}... ($default)]"
+                        pos_str="[${pos:-$dest}...${choices_str} ($default)]"
                     else
-                        pos_str="${pos:-$dest}..."
+                        pos_str="${pos:-$dest}...${choices_str}"
                     fi
                 elif [[ "$nargs" == '*' ]]; then
                     if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}... ($default)]"
+                        pos_str="[${pos:-$dest}...${choices_str} ($default)]"
                     else
-                        pos_str="[${pos:-$dest}...]"
+                        pos_str="[${pos:-$dest}...${choices_str}]"
                     fi
                 elif [[ "$nargs" == '?' ]]; then
                     if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest} ($default)]"
+                        pos_str="[${pos:-$dest}${choices_str} ($default)]"
                     else
-                        pos_str="[${pos:-$dest}]"
+                        pos_str="[${pos:-$dest}${choices_str}]"
                     fi
                 else
                     if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest} ($default)]"
+                        pos_str="[${pos:-$dest}${choices_str} ($default)]"
                     else
-                        pos_str="${pos:-$dest}"
+                        pos_str="${pos:-$dest}${choices_str}"
                     fi
                 fi
                 
@@ -441,20 +446,20 @@ ${poss_str:+"positional arguments:"}${poss_str}
     function _die()
     {
         local msg=$1
-        func_usage >&2
+        _func_usage >&2
         echo -e "error: $msg" >&2
         exit 1
     }
 
     if [[ "$#" == 1 && ( "$1" == "-h" || "$1" == "-help" || "$1" == "--help" )  ]]; then
-        func_usage
+        _func_usage
         exit 0
     fi
     
     while read line; do
         ${XARGPARES_DEBUG:-false} && echo "#line=[$line]"
-        reset_arg
-        parse_line
+        _reset_arg
+        _parse_line
         ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
 
         [[ -z "$short" && -z "$long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
@@ -467,8 +472,30 @@ ${poss_str:+"positional arguments:"}${poss_str}
         ${XARGPARES_REGEXP_SECTION2}
     }")
 
-
+    function _check_choice()
+    {
+        local c 
+        if ((${#choices[@]})); then
+            for c in "${choices[@]}"; do
+                [[ "$c" == "${x_i_x}" ]] && return 0
+            done
+            return 1
+        fi
+        return 0
+    }
+    function _set_array_val()
+    {
+        _check_choice || _die "argument ${pos:-$dest}: invalid choice: '${x_i_x}' (choose from ${choices[*]})"
+        eval "$dest+=( \"${x_i_x}\" )"
+    }
+    function _set_val()
+    {
+        _check_choice || _die "argument ${pos:-$dest}: invalid choice: '${x_i_x}' (choose from ${choices[*]})"
+        printf -v "$dest" "%s" "${x_i_x}"
+    }
 # set -x
+    
+    # parse the argument here
     local is_force_pos=false
     local p_index=0
     while (( "$#" )); do
@@ -479,48 +506,52 @@ ${poss_str:+"positional arguments:"}${poss_str}
             continue
         fi
         local line=
-        reset_arg
-        if [[ "${x_i_x}" =~ ^-[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then
+        _reset_arg
+        if [[ "${x_i_x}" =~ ^-[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then                   # short
             line="${s_optspecs["${x_i_x}"]}"
-        elif [[ "${x_i_x}" =~ ^--[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then
+        elif [[ "${x_i_x}" =~ ^--[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then                # long
             line="${l_optspecs["${x_i_x}"]}"
-        else
+        else                                                                                # position
             ((p_index < ${#p_argspecs[@]})) || _die "unrecognized arguments: ${x_i_x}"
             line="${p_argspecs[$p_index]}"
             ((p_index++))
         fi
         ${XARGPARES_DEBUG:-false} && echo "set line=[$line]"
-        parse_line || _die "argument ${x_i_x}: missing definition"
+        _parse_line || _die "argument ${x_i_x}: missing definition"
 
-        if [[ "$action" =~ store_.* ]];then
-            local val=${action##store_}
-            printf -v "$dest" "%s" "$val"
-        elif [[ -z "$short" && -z "$long" ]]; then # position argument
+
+
+        if [[ -z "$short" && -z "$long" ]]; then # position argument
             if [[ "$nargs" == '+' || "$nargs" == '*' ]]; then
-                eval "$dest+=( \"${x_i_x}\" )"
+                _set_array_val
                 while (( "$#" )); do
                     x_i_x="$1"
+                    shift
                     if [[ "${x_i_x}" =~ ^--?[-a-zA-Z0-9_]*$ ]]; then
                         break
                     fi
-                    eval "$dest+=( \"${x_i_x}\" )"
-                    shift
+                    _set_array_val
                 done
             else
-                printf -v "$dest" "%s" "${x_i_x}"
+                _set_val
             fi
-        else
-            (($#)) || _die "argument ${x_i_x}: expected one argument"
-            x_i_x="$1"
-            printf -v "$dest" "%s" "$x_i_x"
-            shift
+        else  # option argument
+            if [[ "$action" =~ store_.* ]];then
+                x_i_x=${action##store_}
+                _set_val
+            else
+                (($#)) || _die "argument ${x_i_x}: expected one argument"
+                x_i_x="$1"
+                shift
+                _set_val
+            fi
         fi
     done
 
     while ((p_index < ${#p_argspecs[@]})); do
-        reset_arg
+        _reset_arg
         line="${p_argspecs[$p_index]}"
-        parse_line
+        _parse_line
         if [[ "$nargs" == '*' || "$nargs" == '?' || -n "$default" ]]; then
             ((p_index++))
         else
@@ -528,6 +559,8 @@ ${poss_str:+"positional arguments:"}${poss_str}
         fi
         
     done
+
+    unset -f _reset_arg _parse_line _func_usage _die _check_choice _set_array_val _set_val
 
     ${XTRACE:-false} && set -x
 }
