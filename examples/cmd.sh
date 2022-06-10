@@ -58,10 +58,12 @@ function choices_fun()
 {
 	local mode=''			#@ -m; choices=('release' 'debug');desc='choice mode'
 	local fruit=''			#@ choices=( apple orange banana );desc='choice fruit'
+	local nochoice=''		#@
+	local version=1.0 		#@ ver; choices=( V2.0 V3.0 V4.0 )
     ____ "$@"
 
 
-    
+
     echo "mode=$mode"
     echo "fruit=$fruit"
 }

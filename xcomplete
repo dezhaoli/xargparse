@@ -26,7 +26,10 @@ function _xcomplete()
 {
     local cur prev words cword i
 
-
+    function _debug_echo(){
+        # echo "$*" >> ~/Desktop/complete.log
+        :
+    }
 
     # case: bash-completion installed 
     if [[ -n "$BASH_COMPLETION" ]]; then
@@ -53,12 +56,13 @@ function _xcomplete()
         i=2
 
     fi
-
-        # echo "words=[${words[*]}]" >&2
-        # echo "i=[$i]" >&2
-        # echo "cword=[$cword]" >&2
-        # echo "cur=[$cur]" >&2
-        # echo "prev=[$prev]" >&2
+        _debug_echo ''
+        _debug_echo "======================================"
+        _debug_echo "words=[${words[*]}]" >&2
+        _debug_echo "i=[$i]" >&2
+        _debug_echo "cword=[$cword]" >&2
+        _debug_echo "cur=[$cur]" >&2
+        _debug_echo "prev=[$prev]" >&2
 
     COMPREPLY=()
 
@@ -66,11 +70,12 @@ function _xcomplete()
     local sub_cmd=
     local sub_cmd_list=()
     local sub_cmd_opts=()
+    local line=
     function parse_sub_cmd_list()
     {
         sub_cmd_list=()
         while read line; do
-            # echo "==>[$line]"
+            # _debug_echo "==>[$line]"
             eval ${XARGPARES_Class_Function_Signature}
             eval $line
             
@@ -88,17 +93,38 @@ function _xcomplete()
         } 
         ")
     }
+
+
+    local -A s_optspecs
+    local -A l_optspecs
+    local p_argspecs=()
+
+    function _reset_arg()
+    {
+        eval ${XARGPARES_Class_Function_Body}
+    }
+    function _parse_line()
+    {
+        if [[ -z "$line" ]]; then
+            return 1
+        fi
+        eval $line
+    }
+
     function parse_sub_cmd_opt()
     {
         while read line; do
-            eval ${XARGPARES_Class_Function_Body}
-            if [[ -n "$line" ]]; then
-                eval $line
-            fi
+            _reset_arg
+            _parse_line
             
+            _debug_echo "parse line=[$line]"
+
             if [[ -n "$short" || -n "$long" ]]; then
                 sub_cmd_opts+=( "${short}" "${long}" )
             fi
+            [[ -z "$short" && -z "$long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
+            [[ -n "$short" ]] && s_optspecs["$short"]="$line"
+            [[ -n "$long" ]] && l_optspecs["$long"]="$line"
 
         done< <(< "$cmd_path" sed  -nE "
         /^function $sub_cmd\(\)/,/^}/ { 
@@ -110,25 +136,114 @@ function _xcomplete()
     # case 0 sub_cmd; 0 sub_args;
     if (( cword <= i )); then
         parse_sub_cmd_list
-        COMPREPLY=( $( compgen -W "${sub_cmd_list[*]}" -- "${cur#*:}" ) )
+        COMPREPLY=( $( compgen -W "${sub_cmd_list[*]}" -- "${cur}" ) )
         return 0
     fi
 
 
     # case 1 sub_cmd; 
-    sub_cmd="${words[1]}"
+    sub_cmd="${words[i]}"
+    ((i++))
+
+    # find the real sub command function
+    {
+        while read line; do
+            eval ${XARGPARES_Class_Function_Signature}
+            eval $line
+            if [[ "$sub_cmd" == "$alia" ]]; then
+                sub_cmd="$func"
+            fi
+    
+        done< <(< "$cmd_path" sed  -nE "
+        H
+        x
+        /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+            s//func=\2;\1/
+            p
+        } 
+        ")
+    }
 
     parse_sub_cmd_opt
 
+    # parse the argument here
+    local is_force_pos=false
+    local p_index=0
+
+    while (( i < cword )); do
+        local x_i_x="${words[i]}" # NOTE: be careful, the name should be complicated here to avoid conflict
+        ((i++))
+        if [[ "${x_i_x}" == "--" ]]; then
+            is_force_pos=true
+            continue
+        fi
+        local line=
+        _reset_arg
+        if [[ "${x_i_x}" =~ ^-[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then                   # short
+            line="${s_optspecs["${x_i_x}"]}"
+        elif [[ "${x_i_x}" =~ ^--[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then                # long
+            line="${l_optspecs["${x_i_x}"]}"
+        else                                                                                # position
+            ((p_index < ${#p_argspecs[@]})) || return 0  # the rest that we have no completions for
+            line="${p_argspecs[$p_index]}"
+            ((p_index++))
+        fi
+        _debug_echo "set line=[$line]"
+        _parse_line || return 0  #argument missing definition
+
+
+
+        if [[ -z "$short" && -z "$long" ]]; then # position argument
+            if [[ "$nargs" == '+' || "$nargs" == '*' ]]; then
+                while (( i < cword )); do
+                    local x_i_x="${words[i]}"
+                    ((i++))
+                    if [[ "${x_i_x}" =~ ^--?[-a-zA-Z0-9_]*$ ]]; then
+                        break
+                    fi
+                done
+            fi
+        else  # option argument
+            if [[ ! "$action" =~ store_.* ]];then
+                if (( i < cword )); then
+                    local x_i_x="${words[i]}" 
+                    ((i++))
+                fi
+            fi
+        fi
+    done
+
+    function _comp_reply_from_line()
+    {
+        if ((${#choices[@]})); then
+            COMPREPLY=( $( compgen -W "${choices[*]}" -- "$cur" ) )
+        else
+            _filedir
+        fi
+    }
+
+    _debug_echo "p_index=$p_index, p_argspecs=${#p_argspecs[@]}"
+
+    local line=
+    _reset_arg
     if [[ "$cur" =~ -.* ]]; then
         # standard options
         COMPREPLY=( $( compgen -W "${sub_cmd_opts[*]}" -- "$cur" ) )
+        return 0
+    elif [[ "$prev" =~ --.* ]]; then
+        line="${l_optspecs["${x_i_x}"]}"
+    elif [[ "$prev" =~ -.* ]]; then
+        line="${s_optspecs["${x_i_x}"]}"
+    elif ((p_index < ${#p_argspecs[@]})); then
+        line="${p_argspecs[$p_index]}"
     else
-        _filedir 
+        _debug_echo "no one match"
+         return 0
     fi
+    _debug_echo "==>line: $line"
+    _parse_line || return 0  #argument missing definition
+    _comp_reply_from_line
     
-    
-    return 0
 }
 
 
