@@ -208,7 +208,7 @@ function _xargparse_usage_concise()
                     elif [[ -n "$action" && "$action" != append ]]; then
                         _xargparse_die "unknown action \"$action\""
                     else
-                        opt_str="$opt_str arg"
+                        opt_str="$opt_str ${dest^^}"
                     fi
                 # fi
                 opts_str="${opts_str}[$opt_str]${opt_str:+ }"
@@ -271,7 +271,7 @@ function _xargparse_usage_concise()
             elif [[ -n "$action" && "$action" != append ]]; then
                 _xargparse_die "unknown action \"$action\""
             else
-                opt_str="$opt_str arg"
+                opt_str="$opt_str ${dest^^}"
             fi
 
             if [[ -n "$default" ]]; then
@@ -406,7 +406,7 @@ function parse_args(){
                 elif [[ -n "$action" && "$action" != append ]]; then
                     _xargparse_die "unknown action \"$action\""
                 else
-                    opt_str="$opt_str arg"
+                    opt_str="$opt_str ${dest^^}"
                 fi
                 if [[ -n "$default" ]]; then
                     opt_str="$opt_str ($default)"
