@@ -130,7 +130,7 @@ function _xargparse_print_usage()
 {
     { local column_1="$1" column_2="$2" column_0="$3" ;}
     # echo "[${column_1}] [${column_2}]"
-    printf "%3s %s%-80s %s \n" "${column_0}" "" "${column_1}" "${column_2:+#}${column_2}"
+    printf "%3s %s%-80s %s \n" "${column_0}" "" "${column_1}" "${column_2}"
 }
 
 
