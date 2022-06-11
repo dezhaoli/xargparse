@@ -286,7 +286,7 @@ function _xargparse_usage_concise()
         fi
     done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
     H
-    /^##@@[[:space:]]*(alia='label'.*)/ {
+    /^##@@[[:space:]]*(alia='?label'?.*)/ {
         s//section=3;\1/
         s/;[[:space:]]*;/;/g
         p
@@ -302,7 +302,7 @@ function _xargparse_usage_concise()
 
         b loop_2
     }
-    /^##@@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+    /^##@@[[:space:]]*(alia='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
         s//section=4;func=\2;\1/
         s/;[[:space:]]*;/;/g
         p

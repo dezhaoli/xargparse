@@ -111,7 +111,7 @@ function _xcomplete()
         eval $line
     }
 
-    function parse_sub_cmd_opt()
+    function _parse_sub_cmd_opt()
     {
         while read line; do
             _reset_arg
@@ -164,7 +164,7 @@ function _xcomplete()
         ")
     }
 
-    parse_sub_cmd_opt
+    _parse_sub_cmd_opt
 
     # parse the argument here
     local is_force_pos=false
