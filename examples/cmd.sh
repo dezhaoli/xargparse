@@ -53,6 +53,19 @@ function append_fun()
 }
 
 
+#@ help='example of choices'
+function choices_fun()
+{
+    local mode=''           #@ -m; choices=('release' 'debug');help='choice mode'
+    local fruit=''          #@ choices=( apple orange banana );help='choice fruit'
+    ____ "$@"
+
+
+    echo "mode=$mode"
+    echo "fruit=$fruit"
+}
+
+
 
 #@ alia="rename_fun"; help='Function Destcription.'; flag='*'
 function complicated_fun()
@@ -79,19 +92,6 @@ function complicated_fun()
 }
 
 #@
-function choices_fun()
-{
-	local mode=''			#@ -m; choices=('release' 'debug');help='choice mode'
-	local fruit=''			#@ choices=( apple orange banana );help='choice fruit'
-    ____ "$@"
-
-
-
-    echo "mode=$mode"
-    echo "fruit=$fruit"
-}
-
-#@
 function auto_completion_1()
 {
 	echo "auto_completion_1 called!"
@@ -102,26 +102,28 @@ function auto_completion_2()
 	echo "auto_completion_2 called!"
 }
 
-##@@ alia='main-ex'; func='android-parse-args'; help='global options:'
-function android-parse-args()
+#@
+function test_main_ex()
 {
+    local mode=''           #@ -m; choices=('release' 'debug');help='choice mode'
+    local fruit=''          #@ choices=( apple orange banana );help='choice fruit'
+    ____ "$@"
 
-	bundle_id="dezhaoli"						#@ -b; help="set bundleid"
+
+    echo "bundle_id=$bundle_id"
+    echo "mode=$mode"
+    echo "fruit=$fruit"
+}
+
+##@@ alia='main-ex'; func='main-ex'; help='global options:'
+function main-ex()
+{
+	bundle_id="dezhaoli"	#@ -b; help="set bundleid"
+    ____ "$@"
 	
-	args=()
-	raw_args+=( "$@" )
-	while (( "$#" )); do
-		case "$1" in
-		-b)
-			bundle_id="$2"
-			shift 2
-			;;
-		*) # preserve positional arguments
-			args+=("$1")
-			shift
-			;;
-		esac
-	done
+
+    echo "DDDD"
+
 
 }
 ##@@ alia='label'; help='some extend message...'
