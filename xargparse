@@ -73,7 +73,7 @@ XARGPARES_Class_Function_Signature="
     arg=
     alia=
     flag=
-    desc=
+    help=
 "
 XARGPARES_Class_Function_Body="
     dest=
@@ -84,7 +84,7 @@ XARGPARES_Class_Function_Body="
     action=
     choices=()
     nargs=
-    desc=
+    help=
 "
 readonly \
         XARGPARES_VERSION \
@@ -105,15 +105,19 @@ readonly \
 
 # }
 
+function _xargparse_die()
+{
+    local msg=$1
+    echo -e "error: $msg" >&2
+    exit 1
+}
+
 function _xargparse_cmd_src()
 {
     : ${XARGPARES_CMD_SRC:="$0"}
-    if [[ -r "$XARGPARES_CMD_SRC" ]]; then
-        XARGPARES_CMD_SRC="$(realpath "$XARGPARES_CMD_SRC")"   # convert to absolute path
-    else
-        echo -e "error: target cmd [$XARGPARES_CMD_SRC] not found" >&2
-        exit 1
-    fi
+    [[ -r "$XARGPARES_CMD_SRC" ]] || _xargparse_die "target cmd [$XARGPARES_CMD_SRC] not found"
+
+    XARGPARES_CMD_SRC="$(realpath "$XARGPARES_CMD_SRC")"   # convert to absolute path
 }
 
 function _xargparse_class_to_string()
@@ -134,7 +138,7 @@ function _xargparse_usage_concise()
 {
     shopt -qo xtrace && set +x && local XTRACE=true
     _xargparse_cmd_src
-    echo -e "usage: $(basename $XARGPARES_CMD_SRC) <command> [-h] [options] [positional arguments]\ncommand:"
+    echo -e "usage: $(basename $XARGPARES_CMD_SRC) <command> [-h] [optional arguments] [positional arguments]\ncommand:"
  # set -x
     local line=
 
@@ -150,7 +154,7 @@ function _xargparse_usage_concise()
 
     local last_func=
     local last_flag=
-    local last_desc=
+    local last_help=
 
     
     eval local ${XARGPARES_Class_Function_Body}
@@ -166,7 +170,7 @@ function _xargparse_usage_concise()
     {
         if $is_last; then
             is_last=false
-            _xargparse_print_usage "${last_func}${opts_str:+ }${opts_str}${poss_str:+ }${poss_str}" "$last_desc" "$last_flag"
+            _xargparse_print_usage "${last_func}${opts_str:+ }${opts_str}${poss_str:+ }${poss_str}" "$last_help" "$last_flag"
         fi
     }
 
@@ -179,7 +183,7 @@ function _xargparse_usage_concise()
             print_last
             is_last=true
             last_func="${alia:-$func}"
-            last_desc="$desc"
+            last_help="$help"
             last_flag="$flag"
             opts_str=
             poss_str=
@@ -201,6 +205,8 @@ function _xargparse_usage_concise()
                 # else
                     if [[ "$action" =~ store_.* ]]; then
                         opt_str="$opt_str"
+                    elif [[ -n "$action" && "$action" != append ]]; then
+                        _xargparse_die "unknown action \"$action\""
                     else
                         opt_str="$opt_str arg"
                     fi
@@ -240,11 +246,11 @@ function _xargparse_usage_concise()
         elif ((section==3)); then
             print_last
             if [[ "$alia" == "label" ]]; then
-                echo "$desc"
+                echo "$help"
             fi
         elif ((section==4)); then
             print_last
-            echo "$desc"
+            echo "$help"
 
         elif ((section==5)); then
             ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
@@ -256,21 +262,27 @@ function _xargparse_usage_concise()
                 opt_str="$short"
             elif [[ -n "$long" ]]; then
                 opt_str="$long"
+            else
+                _xargparse_print_usage "unsupported use of positional arguments in main-ex. line: $line"
             fi
-            if [[ -n "$opt_str" ]]; then
-                if [[ ! "$action" =~ store_.* ]]; then
-                    opt_str="$opt_str arg"
-                fi
-                if [[ -n "$default" ]]; then
-                    opt_str="$opt_str ($default)"
-                fi
 
-                _xargparse_print_usage "$opt_str" "$desc"
+            if [[ "$action" =~ store_.* ]]; then
+                opt_str="$opt_str"
+            elif [[ -n "$action" && "$action" != append ]]; then
+                _xargparse_die "unknown action \"$action\""
+            else
+                opt_str="$opt_str arg"
             fi
+
+            if [[ -n "$default" ]]; then
+                opt_str="$opt_str ($default)"
+            fi
+
+            _xargparse_print_usage "$opt_str" "$help"
+            
             
         else
-            echo "error: line=[$line]" >&2
-            exit 1
+            _xargparse_die "unknown line: [$line]"
         fi
     done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
     H
@@ -308,7 +320,7 @@ function _xargparse_usage_concise()
 }
 
 
-#@ desc="auto find and parse bash arguages"
+#@ help="auto find and parse bash arguages"
 function ____()
 {
     shopt -qo xtrace && set +x && local XTRACE=true
@@ -333,7 +345,7 @@ function ____()
     ${XTRACE:-false} && set -x
 }
 
-#@ desc="parse bash arguages, like getops"
+#@ help="parse bash arguages, like getops"
 function parse_args(){
     shopt -qo xtrace && set +x && local XTRACE=true
     _xargparse_cmd_src
@@ -370,7 +382,7 @@ function parse_args(){
     function _func_usage()
     {
 
-        local opts_str=
+        local opts_str="\n$(_xargparse_print_usage "-h, --help" "show this help message and exit")"
         local poss_str=
         while read line; do
             ${XARGPARES_DEBUG:-false} &&  echo "##line=[$line]"
@@ -380,7 +392,7 @@ function parse_args(){
 
             local opt_str=
             local pos_str=
-            local choices_str="${choices:+ }{${choices[*]}}"
+            local choices_str="${choices:+ \{}${choices[*]}${choices:+\}}"
             if [[ -n "$short" && -n "$long" ]]; then
                 opt_str="${short}, ${long}"
             elif [[ -n "$short" ]]; then
@@ -389,16 +401,18 @@ function parse_args(){
                 opt_str="$long"
             fi
             if [[ -n "$opt_str" ]]; then
-                if [[ ! "$action" =~ store_.* ]]; then
-                    opt_str="$opt_str arg${choices_str}"
+                if [[ "$action" =~ store_.* ]]; then
+                    opt_str="$opt_str"
+                elif [[ -n "$action" && "$action" != append ]]; then
+                    _xargparse_die "unknown action \"$action\""
                 else
-                    opt_str="${opt_str}"
+                    opt_str="$opt_str arg"
                 fi
                 if [[ -n "$default" ]]; then
                     opt_str="$opt_str ($default)"
                 fi
 
-                opts_str="$opts_str\n$(_xargparse_print_usage "$opt_str" "$desc")"
+                opts_str="$opts_str\n$(_xargparse_print_usage "$opt_str" "$help")"
             else
                 if [[ "$nargs" == '+' ]]; then
                     if [[ -n "$default" ]]; then
@@ -426,7 +440,7 @@ function parse_args(){
                     fi
                 fi
                 
-                poss_str="$poss_str\n$(_xargparse_print_usage "$pos_str" "$desc")"
+                poss_str="$poss_str\n$(_xargparse_print_usage "$pos_str" "$help")"
                 
             fi
 
@@ -436,19 +450,17 @@ function parse_args(){
             ${XARGPARES_REGEXP_SECTION2}
         }")
 
-        echo -e "usage: $(basename $XARGPARES_CMD_SRC) ${alia:-$func} [-h] [options] [positional arguments] 
-${opts_str:+"options:"}${opts_str}
-${poss_str:+"positional arguments:"}${poss_str}
+        echo -e "usage: $(basename $XARGPARES_CMD_SRC) ${alia:-$func} [-h] [optional arguments] [positional arguments] 
+${poss_str:+"positional arguments:"}${poss_str}${poss_str:+\n}
+${opts_str:+"optional arguments:"}${opts_str}
 "
 
     }
 
     function _die()
     {
-        local msg=$1
         _func_usage >&2
-        echo -e "error: $msg" >&2
-        exit 1
+        _xargparse_die "$1"
     }
 
     if [[ "$#" == 1 && ( "$1" == "-h" || "$1" == "-help" || "$1" == "--help" )  ]]; then
@@ -521,7 +533,7 @@ ${poss_str:+"positional arguments:"}${poss_str}
 
 
 
-        if [[ -z "$short" && -z "$long" ]]; then # position argument
+        if [[ -z "$short" && -z "$long" ]]; then # positional argument
             if [[ "$nargs" == '+' || "$nargs" == '*' ]]; then
                 _set_array_val
                 while (( "$#" )); do
@@ -535,10 +547,17 @@ ${poss_str:+"positional arguments:"}${poss_str}
             else
                 _set_val
             fi
-        else  # option argument
+        else  # optional argument
             if [[ "$action" =~ store_.* ]];then
                 x_i_x=${action##store_}
                 _set_val
+            elif [[ "$action" == append ]];then
+                (($#)) || _die "argument ${x_i_x}: expected one argument"
+                x_i_x="$1"
+                shift
+                _set_array_val
+            elif [[ -n "$action" ]]; then
+                _die "unknown action \"$action\""
             else
                 (($#)) || _die "argument ${x_i_x}: expected one argument"
                 x_i_x="$1"
@@ -583,7 +602,7 @@ function main()
             eval ${XARGPARES_Class_Function_Signature}
             eval $line
             if [[ "main-ex" == "$alia" && -n "$func" ]]; then
-                command -v "$func" >/dev/null 2>&1 || { echo "the function[$func] pointed to by alia[$alia] was not found" >&2 ; exit 1; }
+                command -v "$func" >/dev/null 2>&1 || _xargparse_die "the function[$func] pointed to by alia[$alia] was not found"
 
                 args=("$func" "${args[@]}")
                 ${XARGPARES_DEBUG:-false} &&  echo "before: args=${args[*]}" 

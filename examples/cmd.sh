@@ -18,8 +18,8 @@ cd $(dirname $0)
 #@
 function simple_fun()
 {
-	local a=A 		#@ desc='set a'
-	b=B 			#@ desc='set b'
+	local a=A 		#@ help='set a'
+	b=B 			#@ help='set b'
 	____ "$@"
 
 
@@ -29,18 +29,43 @@ function simple_fun()
 
 
 
-#@ alia="rename_fun"; desc='Function Destcription.'; flag='*'
+
+
+#@ help='example of action store'
+function store_fun()
+{
+    local is_force=false                        #@ '-f';action='store_true'
+    local v=value                               #@ '-v';action='store_some_other_value'
+    ____ "$@"
+
+    echo "is_force=$is_force"
+    echo "v=$v"
+}
+
+
+#@ help='example of action append'
+function append_fun()
+{
+    local v=( good luck )                       #@ '-v';action='append'
+    ____ "$@"
+
+    for i in "${v[@]}" ; do echo "v=>$i";done
+}
+
+
+
+#@ alia="rename_fun"; help='Function Destcription.'; flag='*'
 function complicated_fun()
 {
     # set -x
-    local version="2.0.0"                       #@ -v; --version ;desc="option 1's description"
-    local is_force=false                        #@ '-f';action='store_true';desc="option 2's description"
-    local key=~                                 #@ "--key"; desc="key's description"
+    local version="2.0.0"                       #@ -v; --version ;help="option 1's description"
+    local is_force=false                        #@ '-f';action='store_true';help="option 2's description"
+    local key=~                                 #@ "--key"; help="key's description"
 
-    local f_file_name=""                        #@ "file"; desc="f_file_name's description";
-    local path='/'                              #@ desc="path's description";
-    local ws="eeeee"                            #@ workspace; desc="ws's description";
-    local res_list=()                           #@ "others"; nargs='*'; desc="res_list's description";
+    local f_file_name=""                        #@ "file"; help="f_file_name's description";
+    local path='/'                              #@ help="path's description";
+    local ws="eeeee"                            #@ workspace; help="ws's description";
+    local res_list=()                           #@ "others"; nargs='*'; help="res_list's description";
     ____ "$@"
 
     echo "version=$version"
@@ -56,10 +81,8 @@ function complicated_fun()
 #@
 function choices_fun()
 {
-	local mode=''			#@ -m; choices=('release' 'debug');desc='choice mode'
-	local fruit=''			#@ choices=( apple orange banana );desc='choice fruit'
-	local nochoice=''		#@
-	local version=1.0 		#@ ver; choices=( V2.0 V3.0 V4.0 )
+	local mode=''			#@ -m; choices=('release' 'debug');help='choice mode'
+	local fruit=''			#@ choices=( apple orange banana );help='choice fruit'
     ____ "$@"
 
 
@@ -79,11 +102,11 @@ function auto_completion_2()
 	echo "auto_completion_2 called!"
 }
 
-##@@ alia='main-ex'; func='android-parse-args'; desc='global options:'
+##@@ alia='main-ex'; func='android-parse-args'; help='global options:'
 function android-parse-args()
 {
 
-	bundle_id="dezhaoli"						#@ -b; desc="set bundleid"
+	bundle_id="dezhaoli"						#@ -b; help="set bundleid"
 	
 	args=()
 	raw_args+=( "$@" )
@@ -101,7 +124,7 @@ function android-parse-args()
 	done
 
 }
-##@@ alia='label'; desc='some extend message...'
+##@@ alia='label'; help='some extend message...'
 
 
 main "$@"
