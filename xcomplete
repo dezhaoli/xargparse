@@ -27,7 +27,7 @@ function _xcomplete()
     local cur prev words cword i
 
     function _debug_echo(){
-        echo "$*" >> ~/Desktop/complete.log
+        # echo "$*" >> ~/Desktop/complete.log
         :
     }
 
