@@ -620,20 +620,24 @@ function main()
             # echo "==>[$line]"
             eval ${XARGPARES_Class_Function_Signature}
             eval $line
-            if [[ "main-ex" == "$alia" && -n "$func" ]]; then
-                command -v "$func" >/dev/null 2>&1 || _xargparse_die "the function[$func] pointed to by alia[$alia] was not found"
 
-                ${XARGPARES_DEBUG:-false} &&  echo "before: args=${xargparse_main_args[*]}" 
-                "$func" "${xargparse_main_args[@]}"
-                ${XARGPARES_DEBUG:-false} &&  echo "after: args=${xargparse_main_args[@]}"
-            fi
-    
+            command -v "$func" >/dev/null 2>&1 || _xargparse_die "the function[$func] pointed to by alia[$alia] was not found"
+
+            ${XARGPARES_DEBUG:-false} &&  echo "before: args=${xargparse_main_args[*]}" 
+            "$func" "${xargparse_main_args[@]}"
+            ${XARGPARES_DEBUG:-false} &&  echo "after: args=${xargparse_main_args[@]}"
+        
         done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
-        /^##@@[[:space:]]*(.*)/ {
-            s//\1/
+        H
+        x
+        /^##@@[[:space:]]*(alia='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+            s//section=4;func=\2;\1/
+            s/;[[:space:]]*;/;/g
             p
-        } 
+        }
+
         ")
+
         unset XARGPARES_PARSE_MAIN_EX
     }
 

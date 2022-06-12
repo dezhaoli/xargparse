@@ -27,7 +27,7 @@ function _xcomplete()
     local cur prev words cword i
 
     function _debug_echo(){
-        # echo "$*" >> ~/Desktop/complete.log
+        echo "$*" >> ~/Desktop/complete.log
         :
     }
 
@@ -69,30 +69,10 @@ function _xcomplete()
     local cmd_path="$(which "${words[0]}")"
     local sub_cmd=
     local sub_cmd_list=()
+    local -A sub_cmd_alias_map
     local sub_cmd_opts=()
     local line=
-    function parse_sub_cmd_list()
-    {
-        sub_cmd_list=()
-        while read line; do
-            # _debug_echo "==>[$line]"
-            eval ${XARGPARES_Class_Function_Signature}
-            eval $line
-            
-            local sub_cmd="${alia:-$func}"
-            if [[ -n "$sub_cmd" ]]; then
-                sub_cmd_list+=( "$sub_cmd" )
-            fi
-        
-        done< <(< "$cmd_path" sed  -nE "
-        H
-        x
-        /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
-            s//func=\2;\1/
-            p
-        } 
-        ")
-    }
+
 
 
     local -A s_optspecs
@@ -101,6 +81,7 @@ function _xcomplete()
 
     function _reset_arg()
     {
+        eval ${XARGPARES_Class_Function_Signature}
         eval ${XARGPARES_Class_Function_Body}
     }
     function _parse_line()
@@ -111,13 +92,56 @@ function _xcomplete()
         eval $line
     }
 
-    function _parse_sub_cmd_opt()
+    function _parse_global_opt_and_sub_cmd_list()
     {
         while read line; do
             _reset_arg
             _parse_line
-            
             _debug_echo "parse line=[$line]"
+            
+        if ((section==1)); then
+            [[ -n "$func" ]] && sub_cmd_list+=( "${alia:=$func}" )
+            [[ -n "$alia" ]] && sub_cmd_alias_map["$alia"]="$func"
+        elif ((section==5)); then
+
+            if [[ -n "$short" || -n "$long" ]]; then
+                sub_cmd_opts+=( "${short}" "${long}" )
+            fi
+            [[ -z "$short" && -z "$long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
+            [[ -n "$short" ]] && s_optspecs["$short"]="$line"
+            [[ -n "$long" ]] && l_optspecs["$long"]="$line"
+        fi
+
+        done< <(< "$cmd_path" sed  -nE "
+        H
+        x
+        /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+            s//section=1;func=\2;\1/
+            p
+        }
+        /^##@@[[:space:]]*(alia='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+            s//section=4;func=\2;\1/
+            s/;[[:space:]]*;/;/g
+            
+            : loop_5
+            n
+            /^}/d
+            ${XARGPARES_REGEXP_SECTION5}
+
+            b loop_5
+        }
+
+        ")
+
+    }
+
+    function _parse_sub_cmd_opt()
+    {
+        while read line; do
+            _reset_arg
+            _parse_line || continue  #argument missing definition
+            
+            _debug_echo "parse sub_cmd line=[$line]"
 
             if [[ -n "$short" || -n "$long" ]]; then
                 sub_cmd_opts+=( "${short}" "${long}" )
@@ -132,37 +156,27 @@ function _xcomplete()
         }")
 
     }
+    _parse_global_opt_and_sub_cmd_list
 
-    # case 0 sub_cmd; 0 sub_args;
-    if (( cword <= i )); then
-        parse_sub_cmd_list
-        COMPREPLY=( $( compgen -W "${sub_cmd_list[*]}" -- "${cur}" ) )
+    while (( i < cword )); do
+        local x_i_x="${words[i]}"
+        ((i++))
+        if [[ " ${sub_cmd_list[*]} " =~ " $x_i_x " ]]; then
+            sub_cmd=$x_i_x
+            x_i_x="${sub_cmd_alias_map["${sub_cmd}"]}"
+            if [[ -n "$x_i_x" ]]; then
+                sub_cmd=$x_i_x
+            fi
+            break
+        fi
+
+    done
+
+    # case 0 sub_cmd;
+    if [[ -z "$sub_cmd" ]]; then
+        COMPREPLY=( $( compgen -W "${sub_cmd_list[*]} ${sub_cmd_opts[*]}" -- "${cur}" ) )
         return 0
     fi
-
-
-    # case 1 sub_cmd; 
-    sub_cmd="${words[i]}"
-    ((i++))
-
-    # find the real sub command function
-    {
-        while read line; do
-            eval ${XARGPARES_Class_Function_Signature}
-            eval $line
-            if [[ "$sub_cmd" == "$alia" ]]; then
-                sub_cmd="$func"
-            fi
-    
-        done< <(< "$cmd_path" sed  -nE "
-        H
-        x
-        /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
-            s//func=\2;\1/
-            p
-        } 
-        ")
-    }
 
     _parse_sub_cmd_opt
 
