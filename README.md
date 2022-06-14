@@ -17,8 +17,8 @@ Let us start with a very simple example
 #@
 function simple_fun()
 {
-	local a=A 		#@ desc='set a'
-	b=B 			#@ desc='set b'
+	local a=A 		#@ 
+	b=B 			#@ 
 	____ "$@"
 
 
@@ -40,17 +40,17 @@ Let's take a more complicated example
 ./examples/cmd.sh
 
 ```shell
-#@ alia="rename_fun"; desc='Function Destcription.'; flag='*'
+#@ alia="rename_fun"; help='Function Destcription.'; flag='*'
 function complicated_fun()
 {
-    local version="2.0.0"                       #@ -v; --version ;desc="option 1's description"
-    local is_force=false                        #@ '-f';action='store_true';desc="option 2's description"
-    local key=~                                 #@ "--key"; desc="key's description"
+    local version="2.0.0"                       #@ -v; --version ;help="option 1's description"
+    local is_force=false                        #@ '-f';action='store_true';help="option 2's description"
+    local key=~                                 #@ "--key"; help="key's description"
 
-    local f_file_name=""                        #@ "file"; desc="f_file_name's description";
-    local path='/'                              #@ desc="path's description";
-    local ws="eeeee"                            #@ workspace; desc="ws's description";
-    local res_list=()                           #@ "others"; nargs='+'; desc="res_list's description";
+    local f_file_name=""                        #@ "file"; help="f_file_name's description";
+    local path='/'                              #@ help="path's description";
+    local ws="eeeee"                            #@ workspace; help="ws's description";
+    local res_list=()                           #@ "others"; nargs='+'; help="res_list's description";
     ____ "$@"
 
     echo "version=$version"
