@@ -81,6 +81,7 @@ function _xcomplete()
 
     function _reset_arg()
     {
+        section=
         eval ${XARGPARES_Class_Function_Signature}
         eval ${XARGPARES_Class_Function_Body}
     }
@@ -102,6 +103,7 @@ function _xcomplete()
         if ((section==1)); then
             [[ -n "$func" ]] && sub_cmd_list+=( "${alia:=$func}" )
             [[ -n "$alia" ]] && sub_cmd_alias_map["$alia"]="$func"
+            
         elif ((section==5)); then
 
             if [[ -n "$short" || -n "$long" ]]; then
@@ -112,26 +114,7 @@ function _xcomplete()
             [[ -n "$long" ]] && l_optspecs["$long"]="$line"
         fi
 
-        done< <(< "$cmd_path" sed  -nE "
-        H
-        x
-        /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
-            s//section=1;func=\2;\1/
-            p
-        }
-        /^##@@[[:space:]]*(alia='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
-            s//section=4;func=\2;\1/
-            s/;[[:space:]]*;/;/g
-            
-            : loop_5
-            n
-            /^}/d
-            ${XARGPARES_REGEXP_SECTION5}
-
-            b loop_5
-        }
-
-        ")
+        done< <(< "$cmd_path" sed  -nE "$XARGPARES_REGEXP_ALL_SECTION")
 
     }
 

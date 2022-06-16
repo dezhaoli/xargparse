@@ -4,30 +4,25 @@
 # @Date:   
 # Please contact dezhaoli if you have any questions.
 ###########################################################
-XARGPARES_CMD_SRC="$(realpath $0)"
-cd $(dirname $0)
+XARGPARES_CMD_SRC="$(realpath $0)"  # This line is not needed if your command is already in $PATH
 
 
-. ../xargparse
-# [[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
+# source xargparse by:
+. $(dirname $0)/../xargparse
+
+# or by: 
+# [[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)" #(recommend)
 
 
-# XARGPARES_DEBUG=true
-
-
-#@
-function simple_fun()
+#@ help="tips for function"
+function tips_fun()
 {
-	local a=A 		#@ help='set a'
-	b=B 			#@ help='set b'
+	local a= 		#@ help='tips for argument'
 	____ "$@"
 
 
 	echo "a=$a"
-	echo "b=$b"
 }
-
-
 
 
 
@@ -91,12 +86,15 @@ function complicated_fun()
 
 }
 
-#@
+#TODO: support group title and message
+##@@ kind='group'; help='some message'
+
+#@ group=aa
 function auto_completion_1()
 {
 	echo "auto_completion_1 called!"
 }
-#@
+#@ group=aa
 function auto_completion_2()
 {
 	echo "auto_completion_2 called!"
@@ -110,23 +108,21 @@ function test_main_ex()
     ____ "$@"
 
 
-    echo "bundle_id=$bundle_id"
+    echo "author=$author"
     echo "mode=$mode"
     echo "fruit=$fruit"
 }
 
-##@@ alia='main-ex'; func='main-ex'; help='global options:'
+##@@ kind='label'; help='some extend message...'
+
+##@@ kind='main-ex'; help='global options:'
 function main-ex()
 {
-	bundle_id="dezhaoli"	#@ -b; help="set bundleid"
+	author="dezhaoli"	#@ -b; help="set author"
     ____ "$@"
 	
 
-    echo "DDDD"
-
-
 }
-##@@ alia='label'; help='some extend message...'
 
 
 main "$@"

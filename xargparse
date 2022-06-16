@@ -36,7 +36,7 @@ XARGPARES_VERSION=1.1.1
 
 
 XARGPARES_REGEXP_SECTION2="
-/[[:space:]]*(local[[:space:]]+)?([^[:space:]]*)=(.*[^[:space:]])[[:space:]]+#@[[:space:]]*(.*)/ {
+/[[:space:]]*(local[[:space:]]+)?([^[:space:]]*)=(.*[^[:space:]])?[[:space:]]+#@[[:space:]]*(.*)/ {
     s//\4;dest=\2;default=\3;section=2;/;
     s/^[[:space:]]*([\"']?[a-zA-Z0-9_]+[\"']?)([[:space:]]*;.*)/pos=\1\2/
 
@@ -66,14 +66,45 @@ XARGPARES_REGEXP_SECTION5="
     p;
 }
 "
+XARGPARES_REGEXP_ALL_SECTION="
+    H
+    /^##@@[[:space:]]*(kind='?label'?.*)/ {
+        s//section=3;\1/
+        s/;[[:space:]]*;/;/g
+        p
+    }
+    x
+    /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+        s//section=1;func=\2;\1/
+        p
+        : loop_2
+        n
+        /^}/d
+        ${XARGPARES_REGEXP_SECTION2}
+
+        b loop_2
+    }
+    /^##@@[[:space:]]*(kind='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+        s//section=4;func=\2;\1/
+        s/;[[:space:]]*;/;/g
+        p
+        : loop_5
+        n
+        /^}/d
+        ${XARGPARES_REGEXP_SECTION5}
+
+        b loop_5
+    }"
 
 
 XARGPARES_Class_Function_Signature="
+    kind=
     func=
     arg=
     alia=
     flag=
     help=
+    group=
 "
 XARGPARES_Class_Function_Body="
     dest=
@@ -86,24 +117,27 @@ XARGPARES_Class_Function_Body="
     nargs=
     help=
 "
+XARGPARES_Class_Function_Body_Last="
+    is_last=false
+    l_group=
+    l_func=
+    l_alia=
+    l_flag=
+    l_help=
+    l_opt_str=
+    l_pos_str=
+
+"
+
 readonly \
         XARGPARES_VERSION \
         XARGPARES_REGEXP_SECTION2 \
         XARGPARES_REGEXP_SECTION5 \
+        XARGPARES_REGEXP_ALL_SECTION \
         XARGPARES_Class_Function_Signature \
         XARGPARES_Class_Function_Body
 
-# function _unset_xargparse_defines()
-# {
-#     unset -f have
-#     unset \
-#         XARGPARES_VERSION \
-#         XARGPARES_REGEXP_SECTION2 \
-#         XARGPARES_REGEXP_SECTION5 \
-#         XARGPARES_Class_Function_Signature \
-#         XARGPARES_Class_Function_Body
 
-# }
 
 function _xargparse_die()
 {
@@ -126,53 +160,48 @@ function _xargparse_class_to_string()
     eval echo $(echo "$class" |sed -nE '/([a-z]+)=/s//\1=\"\$\1;\"/g ; /([a-z]+)=.*\(\)/s//\1=\"\(\$\{\1\[\*\]\}\);\"/g;p')
 }
 
-function _xargparse_print_usage()
+function _xargparse_print_subcmd()
 {
-    { local column_1="$1" column_2="$2" column_0="$3" ;}
-    # echo "[${column_1}] [${column_2}]"
-    printf "%3s %s%-80s %s \n" "${column_0}" "" "${column_1}" "${column_2}"
+    local column_1="$1" column_2="$2" column_0="$3" 
+    printf "%2s %-30s %s \n" "${column_0}" "${column_1}" "${column_2:+: }${column_2}"
 }
 
 
-function _xargparse_usage_concise()
+function _xargparse_usage_verbose()
 {
+    local is_verbose=${1:-true}
     shopt -qo xtrace && set +x && local XTRACE=true
     _xargparse_cmd_src
-    echo -e "usage: $(basename $XARGPARES_CMD_SRC) <command> [-h] [optional arguments] [positional arguments]\ncommand:"
- # set -x
+
+    #TODO: support group's title and message 
+    local -A groups
+    local subcmds=( "$(_xargparse_print_subcmd 'help' "$($is_verbose && printf "show this help message and exit")")" )
+    local label_str=
+    local main_ex_str=
+
+
     local line=
-
-    local eol=$'\n '
-
     local section=
-
-    eval local ${XARGPARES_Class_Function_Signature}
-
-    local is_last=false
-    local opts_str=
-    local poss_str=
-
-    local last_func=
-    local last_flag=
-    local last_help=
-
-    
-    eval local ${XARGPARES_Class_Function_Body}
+    eval local ${XARGPARES_Class_Function_Signature} ${XARGPARES_Class_Function_Body}
     function _reset_arg()
     {
         section=
-
-        eval ${XARGPARES_Class_Function_Signature}
-
-        eval ${XARGPARES_Class_Function_Body}
+        eval ${XARGPARES_Class_Function_Signature} ${XARGPARES_Class_Function_Body}
     }
-    function print_last()
-    {
-        if $is_last; then
-            is_last=false
-            _xargparse_print_usage "${last_func}${opts_str:+ }${opts_str}${poss_str:+ }${poss_str}" "$last_help" "$last_flag"
-        fi
-    }
+
+    if $is_verbose; then
+        eval local ${XARGPARES_Class_Function_Body_Last}
+        function print_last()
+        {
+            if $is_last; then
+                is_last=false
+                eval "$l_group+=( \"$(_xargparse_print_subcmd \
+                            "$l_func${l_alia:+ (}$l_alia${l_alia:+)}${l_opt_str:+ }${l_opt_str}${l_pos_str:+ }${l_pos_str}" \
+                            "${l_help}" \
+                            "$l_flag")\" )"
+            fi
+        }
+    fi
 
     while read line; do
         ${XARGPARES_DEBUG:-false} && echo "###line=[$line]"
@@ -180,29 +209,41 @@ function _xargparse_usage_concise()
         eval $line
         if ((section==1)); then
             ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Signature"
-            print_last
-            is_last=true
-            last_func="${alia:-$func}"
-            last_help="$help"
-            last_flag="$flag"
-            opts_str=
-            poss_str=
+            if [[ -n "$group" ]]; then
+                if [[ -z "${groups[$group]}" ]]; then
+                    groups[$group]=''
+                fi
+            else
+                group=subcmds
+            fi
+            if $is_verbose; then
+                print_last
+                is_last=true
+                l_group=$group
+                l_func="$func"
+                l_alia=$alia
+                l_help="$help"
+                l_flag="$flag"
+                l_opt_str=
+                l_pos_str=
+            else
+                eval "$group+=( \"$(_xargparse_print_subcmd "$func${alia:+ (}$alia${alia:+)}" )\" )"
+            fi
+
             
         elif ((section==2)); then
             ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
-            local opt_str=
-            local pos_str=
-            if [[ -n "$short" && -n "$long" ]]; then
-                opt_str="${short}|${long}"
-            elif [[ -n "$short" ]]; then
-                opt_str="$short"
-            elif [[ -n "$long" ]]; then
-                opt_str="$long"
-            fi
-            if [[ -n "$opt_str" ]]; then
-                # if [[ -n "$default" ]]; then
-                #     opt_str="$opt_str ($default)"
-                # else
+            if $is_verbose; then
+                local opt_str=
+                local pos_str=
+                if [[ -n "$short" && -n "$long" ]]; then
+                    opt_str="${short}|${long}"
+                elif [[ -n "$short" ]]; then
+                    opt_str="$short"
+                elif [[ -n "$long" ]]; then
+                    opt_str="$long"
+                fi
+                if [[ -n "$opt_str" ]]; then
                     if [[ "$action" =~ store_.* ]]; then
                         opt_str="$opt_str"
                     elif [[ -n "$action" && "$action" != append ]]; then
@@ -210,47 +251,46 @@ function _xargparse_usage_concise()
                     else
                         opt_str="$opt_str ${dest^^}"
                     fi
-                # fi
-                opts_str="${opts_str}[$opt_str]${opt_str:+ }"
-            else
-                if [[ "$nargs" == '+' ]]; then
-                    if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}... ($default)]"
-                    else
-                        pos_str="${pos:-$dest}..."
-                    fi
-                elif [[ "$nargs" == '*' ]]; then
-                    if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}... ($default)]"
-                    else
-                        pos_str="[${pos:-$dest}...]"
-                    fi
-                elif [[ "$nargs" == '?' ]]; then
-                    if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest} ($default)]"
-                    else
-                        pos_str="[${pos:-$dest}]"
-                    fi
+                    l_opt_str="${l_opt_str}[$opt_str]${opt_str:+ }"
                 else
-                    if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}]"
+                    if [[ "$nargs" == '+' ]]; then
+                        if [[ -n "$default" ]]; then
+                            pos_str="[${pos:-$dest}... ($default)]"
+                        else
+                            pos_str="${pos:-$dest}..."
+                        fi
+                    elif [[ "$nargs" == '*' ]]; then
+                        if [[ -n "$default" ]]; then
+                            pos_str="[${pos:-$dest}... ($default)]"
+                        else
+                            pos_str="[${pos:-$dest}...]"
+                        fi
+                    elif [[ "$nargs" == '?' ]]; then
+                        if [[ -n "$default" ]]; then
+                            pos_str="[${pos:-$dest} ($default)]"
+                        else
+                            pos_str="[${pos:-$dest}]"
+                        fi
                     else
-                        pos_str="${pos:-$dest}"
+                        if [[ -n "$default" ]]; then
+                            pos_str="[${pos:-$dest}]"
+                        else
+                            pos_str="${pos:-$dest}"
+                        fi
                     fi
+                    
+                    l_pos_str="${l_pos_str}$pos_str${pos_str:+ }"
+                    
                 fi
-                
-                poss_str="${poss_str}$pos_str${pos_str:+ }"
-                
             fi
-            
         elif ((section==3)); then
-            print_last
-            if [[ "$alia" == "label" ]]; then
-                echo "$help"
+            $is_verbose && print_last
+            if [[ "$kind" == "label" ]]; then
+                label_str="${label_str}$help\n"
             fi
         elif ((section==4)); then
-            print_last
-            echo "$help"
+            $is_verbose && print_last
+            main_ex_str="${main_ex_str}$help\n"
 
         elif ((section==5)); then
             ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
@@ -263,7 +303,7 @@ function _xargparse_usage_concise()
             elif [[ -n "$long" ]]; then
                 opt_str="$long"
             else
-                _xargparse_print_usage "unsupported use of positional arguments in main-ex. line: $line"
+                _xargparse_die "unsupported use of positional arguments in main-ex. line: $line"
             fi
 
             if [[ "$action" =~ store_.* ]]; then
@@ -278,44 +318,27 @@ function _xargparse_usage_concise()
                 opt_str="$opt_str ($default)"
             fi
 
-            _xargparse_print_usage "$opt_str" "$help"
+            main_ex_str="${main_ex_str}$(_xargparse_print_subcmd "$opt_str" "$help")\n"
             
             
         else
             _xargparse_die "unknown line: [$line]"
         fi
-    done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
-    H
-    /^##@@[[:space:]]*(alia='?label'?.*)/ {
-        s//section=3;\1/
-        s/;[[:space:]]*;/;/g
-        p
-    }
-    x
-    /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
-        s//section=1;func=\2;\1/
-        p
-        : loop_2
-        n
-        /^}/d
-        ${XARGPARES_REGEXP_SECTION2}
+    done< <(< "$XARGPARES_CMD_SRC" sed  -nE "$XARGPARES_REGEXP_ALL_SECTION")
+    $is_verbose && print_last
 
-        b loop_2
-    }
-    /^##@@[[:space:]]*(alia='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
-        s//section=4;func=\2;\1/
-        s/;[[:space:]]*;/;/g
-        p
-        : loop_5
-        n
-        /^}/d
-        ${XARGPARES_REGEXP_SECTION5}
+    local group_str g
+    for g in "${!groups[@]}"; do
+        group_str="$group_str$(eval printf "%s\\\n" \""\${${g}[@]}"\"| sort -k 1.4)"
+    done
+    printf "usage: $(basename $XARGPARES_CMD_SRC) <subcommand> [options] [args]
+Type '$(basename $XARGPARES_CMD_SRC) <subcommand> -h' for help on a specific subcommand.
+${label_str:+\n}$label_str
+Available subcommands:
+$( printf "%s\n" "${subcmds[@]}"| sort -k 1.4)
+${group_str:+\n}$group_str${group_str:+\n}
+$main_ex_str" 
 
-        b loop_5
-    }
-
-    ")
-    print_last
     ${XTRACE:-false} && set -x
 }
 
@@ -381,8 +404,7 @@ function parse_args(){
 
     function _func_usage()
     {
-
-        local opts_str="\n$(_xargparse_print_usage "-h, --help" "show this help message and exit")"
+        local opts_str="\n$(_xargparse_print_subcmd "-h, --help" "show this help message and exit")"
         local poss_str=
         while read line; do
             ${XARGPARES_DEBUG:-false} &&  echo "##line=[$line]"
@@ -412,7 +434,7 @@ function parse_args(){
                     opt_str="$opt_str ($default)"
                 fi
 
-                opts_str="$opts_str\n$(_xargparse_print_usage "$opt_str" "$help")"
+                opts_str="$opts_str\n$(_xargparse_print_subcmd "$opt_str" "$help")"
             else
                 if [[ "$nargs" == '+' ]]; then
                     if [[ -n "$default" ]]; then
@@ -440,7 +462,7 @@ function parse_args(){
                     fi
                 fi
                 
-                poss_str="$poss_str\n$(_xargparse_print_usage "$pos_str" "$help")"
+                poss_str="$poss_str\n$(_xargparse_print_subcmd "$pos_str" "$help")"
                 
             fi
 
@@ -450,9 +472,9 @@ function parse_args(){
             ${XARGPARES_REGEXP_SECTION2}
         }")
 
-        echo -e "usage: $(basename $XARGPARES_CMD_SRC) ${alia:-$func} [-h] [optional arguments] [positional arguments] 
-${poss_str:+"positional arguments:"}${poss_str}${poss_str:+\n}
-${opts_str:+"optional arguments:"}${opts_str}
+        printf "usage: $(basename $XARGPARES_CMD_SRC) ${alia:-$func} [options] [args] 
+${poss_str:+"Valid args:"}${poss_str}${poss_str:+\n}
+${opts_str:+"Valid options:"}${opts_str}
 "
 
     }
@@ -630,7 +652,7 @@ function main()
         done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
         H
         x
-        /^##@@[[:space:]]*(alia='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
+        /^##@@[[:space:]]*(kind='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
             s//section=4;func=\2;\1/
             s/;[[:space:]]*;/;/g
             p
@@ -641,11 +663,18 @@ function main()
         unset XARGPARES_PARSE_MAIN_EX
     }
 
-    # show usage
+    # show usage concise
     if (( ${#xargparse_main_args[@]} == 0 )); then
-        _xargparse_usage_concise >&2
+        _xargparse_usage_verbose false >&2
         exit 0
     fi
+
+    # show usage verbose
+    if [[ ${#xargparse_main_args[@]} == 1 && "${xargparse_main_args[0]}" == 'help' ]]; then
+        _xargparse_usage_verbose  >&2
+        exit 0
+    fi
+    
 
     # install bash-complete
     if [[ ${#xargparse_main_args[@]} == 1 && "${xargparse_main_args[0]}" == '____' ]]; then
