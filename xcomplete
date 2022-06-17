@@ -68,7 +68,7 @@ function _xcomplete()
 
     local cmd_path="$(which "${words[0]}")"
     local sub_cmd=
-    local sub_cmd_list=()
+    local sub_cmd_list=( help )
     local -A sub_cmd_alias_map
     local sub_cmd_opts=()
     local line=
@@ -101,8 +101,8 @@ function _xcomplete()
             _debug_echo "parse line=[$line]"
             
         if ((section==1)); then
-            [[ -n "$func" ]] && sub_cmd_list+=( "${alia:=$func}" )
-            [[ -n "$alia" ]] && sub_cmd_alias_map["$alia"]="$func"
+            [[ -n "$func" ]] && sub_cmd_list+=( "$func" )
+            [[ -n "$alia" ]] && sub_cmd_list+=( "$alia" ) && sub_cmd_alias_map["$alia"]="$func"
             
         elif ((section==5)); then
 
