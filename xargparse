@@ -171,6 +171,8 @@ function _xargparse_usage_verbose()
 {
     local is_verbose=${1:-true}
     shopt -qo xtrace && set +x && local XTRACE=true
+    [[ $- == *e* ]] && set +e && local XERREXIT=true
+
     _xargparse_cmd_src
 
     #TODO: support group's title and message 
@@ -339,8 +341,9 @@ Available subcommands:
 $( printf "%s\n" "${subcmds[@]}"| sort -k 1.4)
 ${group_str:+\n}$group_str
 $main_ex_str" 
-
+    ${XERREXIT:-false} && set -e
     ${XTRACE:-false} && set -x
+    return 0
 }
 
 
@@ -348,6 +351,7 @@ $main_ex_str"
 function ____()
 {
     shopt -qo xtrace && set +x && local XTRACE=true
+    [[ $- == *e* ]] && set +e && local XERREXIT=true
 
     if (($#==0)) && ${XARGPARES_USE_BASH_ARGV:-true}; then
         local offset=1
@@ -366,12 +370,15 @@ function ____()
 
     parse_args "$@"
 
+    ${XERREXIT:-false} && set -e
     ${XTRACE:-false} && set -x
+    return 0
 }
 
 #@ help="parse bash arguages, like getops"
 function parse_args(){
     shopt -qo xtrace && set +x && local XTRACE=true
+    [[ $- == *e* ]] && set +e && local XERREXIT=true
     _xargparse_cmd_src
 
     local func=""
@@ -620,7 +627,9 @@ ${opts_str:+"Valid options:"}${opts_str}
 
     unset -f _reset_arg _parse_line _func_usage _die _check_choice _set_array_val _set_val _set_main_args
 
+    ${XERREXIT:-false} && set -e
     ${XTRACE:-false} && set -x
+    return 0
 }
 
 
@@ -628,6 +637,8 @@ ${opts_str:+"Valid options:"}${opts_str}
 function main()
 {
     shopt -qo xtrace && set +x && local XTRACE=true
+    [[ $- == *e* ]] && set +e && local XERREXIT=true
+
     _xargparse_cmd_src
 
     XARGPARES_USE_BASH_ARGV=false
@@ -704,7 +715,8 @@ function main()
         ")
     }
 
-    ${XTRACE:-false} && set -x
+    ${XERREXIT:-false} && set -e
+    ${XTRACE:-false} && set -x 
 
     "${xargparse_main_args[@]}"
 
