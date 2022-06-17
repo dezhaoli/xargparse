@@ -329,14 +329,15 @@ function _xargparse_usage_verbose()
 
     local group_str g
     for g in "${!groups[@]}"; do
-        group_str="$group_str$(eval printf "%s\\\n" \""\${${g}[@]}"\"| sort -k 1.4)"
+        group_str="$(eval printf "%s\\\n" \""\${${g}[@]}"\"| sort -k 1.4)\n\n$group_str"
     done
+
     printf "usage: $(basename $XARGPARES_CMD_SRC) <subcommand> [options] [args]
 Type '$(basename $XARGPARES_CMD_SRC) <subcommand> -h' for help on a specific subcommand.
 ${label_str:+\n}$label_str
 Available subcommands:
 $( printf "%s\n" "${subcmds[@]}"| sort -k 1.4)
-${group_str:+\n}$group_str${group_str:+\n}
+${group_str:+\n}$group_str
 $main_ex_str" 
 
     ${XTRACE:-false} && set -x
