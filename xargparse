@@ -36,7 +36,7 @@ XARGPARES_VERSION=1.1.1
 
 
 XARGPARES_REGEXP_SECTION2="
-/[[:space:]]*(local[[:space:]]+)?([^[:space:]]*)=(.*[^[:space:]])?[[:space:]]+#@[[:space:]]*(.*)/ {
+/[[:space:]]*(local[[:space:]]+)?([^[:space:]=]*)=(.*[^[:space:]])?[[:space:]]+#@[[:space:]]*(.*)/ {
     s//\4;dest=\2;default=\3;section=2;/;
     s/^[[:space:]]*([\"']?[a-zA-Z0-9_]+[\"']?)([[:space:]]*;.*)/pos=\1\2/
 
@@ -52,7 +52,7 @@ XARGPARES_REGEXP_SECTION2="
 }
 "
 XARGPARES_REGEXP_SECTION5="
-/[[:space:]]*(local[[:space:]]+)?([^[:space:]]*)=(.*[^[:space:]])[[:space:]]+#@[[:space:]]*(.*)/ {
+/[[:space:]]*(local[[:space:]]+)?([^[:space:]=]*)=(.*[^[:space:]])[[:space:]]+#@[[:space:]]*(.*)/ {
     s//\4;dest=\2;default=\3;section=5;/;
 
     s/^[[:space:]]*([\"']?--[a-zA-Z0-9_][-a-zA-Z0-9_]*[\"']?)([[:space:]]*;.*)/long=\1\2/
