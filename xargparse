@@ -655,8 +655,16 @@ function main()
     local XTRACE XERREXIT
     shopt -qo xtrace && set +x && XTRACE=true
     [[ $- == *e* ]] && set +e && XERREXIT=true
-
+ 
     _xargparse_cmd_src
+
+    # install bash-complete
+    # if [[ ${#xargparse_main_args[@]} == 1 && "${xargparse_main_args[0]}" == '____' ]]; then
+    local reg_f=~/".xargparse/bash_completion.d/$(basename "$XARGPARES_CMD_SRC")"
+    if [[ ! -f "$reg_f" ]]; then
+        touch "$reg_f"
+        (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
+    fi
 
     XARGPARES_USE_BASH_ARGV=false
     eval local ${XARGPARES_Class_Function_Signature}
@@ -704,15 +712,7 @@ function main()
         _xargparse_usage_verbose  >&2
         exit 0
     fi
-    
-
-    # install bash-complete
-    if [[ ${#xargparse_main_args[@]} == 1 && "${xargparse_main_args[0]}" == '____' ]]; then
-        touch ~/".xargparse/bash_completion.d/$(basename "$XARGPARES_CMD_SRC")"
-        (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
-
-    fi
-
+   
     # find the real sub command function
     {
         while read line; do
