@@ -506,7 +506,7 @@ ${opts_str:+"Valid options:"}${opts_str}
 
     function _die()
     {
-        ${XARGPARES_PARSE_MAIN_EX:-false} && _func_usage >&2
+        ${XARGPARES_PARSE_MAIN_EX:-false} || _func_usage >&2
         _xargparse_die "$1"
     }
 
