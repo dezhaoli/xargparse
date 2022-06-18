@@ -116,6 +116,7 @@ XARGPARES_Class_Function_Body="
     choices=()
     nargs=
     help=
+    filter=
 "
 XARGPARES_Class_Function_Body_Last="
     is_last=false

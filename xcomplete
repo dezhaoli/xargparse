@@ -215,7 +215,15 @@ function _xcomplete()
         if ((${#choices[@]})); then
             COMPREPLY=( $( compgen -W "${choices[*]}" -- "$cur" ) )
         else
-            _filedir
+            _debug_echo "$filter"
+            if [[ "$filter" == -dir ]]; then
+                _filedir -d
+            elif [[ -n "$filter" ]]; then
+                _filedir "$filter"
+            else
+                _filedir
+            fi
+            
         fi
     }
 
