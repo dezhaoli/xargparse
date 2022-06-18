@@ -169,9 +169,11 @@ function _xargparse_print_subcmd()
 
 function _xargparse_usage_verbose()
 {
+    local XTRACE XERREXIT
+    shopt -qo xtrace && set +x && XTRACE=true
+    [[ $- == *e* ]] && set +e && XERREXIT=true
+
     local is_verbose=${1:-true}
-    shopt -qo xtrace && set +x && local XTRACE=true
-    [[ $- == *e* ]] && set +e && local XERREXIT=true
 
     _xargparse_cmd_src
 
@@ -350,8 +352,9 @@ $main_ex_str"
 #@ help="auto find and parse bash arguages"
 function ____()
 {
-    shopt -qo xtrace && set +x && local XTRACE=true
-    [[ $- == *e* ]] && set +e && local XERREXIT=true
+    local XTRACE XERREXIT
+    shopt -qo xtrace && set +x && XTRACE=true
+    [[ $- == *e* ]] && set +e && XERREXIT=true
 
     if (($#==0)) && ${XARGPARES_USE_BASH_ARGV:-true}; then
         local offset=1
@@ -377,13 +380,14 @@ function ____()
 
 #@ help="parse bash arguages, like getops"
 function parse_args(){
-    shopt -qo xtrace && set +x && local XTRACE=true
-    [[ $- == *e* ]] && set +e && local XERREXIT=true
+    local XTRACE XERREXIT
+    shopt -qo xtrace && set +x && XTRACE=true
+    [[ $- == *e* ]] && set +e && XERREXIT=true
     _xargparse_cmd_src
 
-    local func=""
-    for func in "${FUNCNAME[@]}"; do
-        if [[ "$func" != "parse_args" && "$func" != "____" ]]; then
+    local funcname=""
+    for funcname in "${FUNCNAME[@]}"; do
+        if [[ "$funcname" != "parse_args" && "$funcname" != "____" ]]; then
             break
         fi
     done
@@ -395,11 +399,11 @@ function parse_args(){
     local line=
 
 
-    eval local ${XARGPARES_Class_Function_Body}
+    eval local ${XARGPARES_Class_Function_Signature} ${XARGPARES_Class_Function_Body}
 
     function _reset_arg()
     {
-        eval ${XARGPARES_Class_Function_Body}
+        eval ${XARGPARES_Class_Function_Signature} ${XARGPARES_Class_Function_Body}
     }
     function _parse_line()
     {
@@ -412,75 +416,89 @@ function parse_args(){
 
     function _func_usage()
     {
+        local label_str=
         local opts_str="\n$(_xargparse_print_subcmd "-h, --help" "show this help message and exit")"
         local poss_str=
         while read line; do
             ${XARGPARES_DEBUG:-false} &&  echo "##line=[$line]"
             _reset_arg
             _parse_line
+
             ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
-
-            local opt_str=
-            local pos_str=
-            local choices_str="${choices:+ {}${choices[*]}${choices:+\}}"
-            if [[ -n "$short" && -n "$long" ]]; then
-                opt_str="${short}, ${long}"
-            elif [[ -n "$short" ]]; then
-                opt_str="$short"
-            elif [[ -n "$long" ]]; then
-                opt_str="$long"
-            fi
-            if [[ -n "$opt_str" ]]; then
-                if [[ "$action" =~ store_.* ]]; then
-                    opt_str="$opt_str"
-                elif [[ -n "$action" && "$action" != append ]]; then
-                    _xargparse_die "unknown action \"$action\""
-                else
-                    opt_str="$opt_str ${dest^^}"
-                fi
-                if [[ -n "$default" ]]; then
-                    opt_str="$opt_str ($default)"
-                fi
-
-                opts_str="$opts_str\n$(_xargparse_print_subcmd "$opt_str" "$help")"
+            if (( $section == 1)); then
+                label_str="$func${alia:+ (}$alia${alia:+)}${help:+: }${help}"
             else
-                if [[ "$nargs" == '+' ]]; then
-                    if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}...${choices_str} ($default)]"
-                    else
-                        pos_str="${pos:-$dest}...${choices_str}"
-                    fi
-                elif [[ "$nargs" == '*' ]]; then
-                    if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}...${choices_str} ($default)]"
-                    else
-                        pos_str="[${pos:-$dest}...${choices_str}]"
-                    fi
-                elif [[ "$nargs" == '?' ]]; then
-                    if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}${choices_str} ($default)]"
-                    else
-                        pos_str="[${pos:-$dest}${choices_str}]"
-                    fi
-                else
-                    if [[ -n "$default" ]]; then
-                        pos_str="[${pos:-$dest}${choices_str} ($default)]"
-                    else
-                        pos_str="${pos:-$dest}${choices_str}"
-                    fi
+
+                local opt_str=
+                local pos_str=
+                local choices_str="${choices:+ {}${choices[*]}${choices:+\}}"
+                if [[ -n "$short" && -n "$long" ]]; then
+                    opt_str="${short}, ${long}"
+                elif [[ -n "$short" ]]; then
+                    opt_str="$short"
+                elif [[ -n "$long" ]]; then
+                    opt_str="$long"
                 fi
-                
-                poss_str="$poss_str\n$(_xargparse_print_subcmd "$pos_str" "$help")"
-                
+                if [[ -n "$opt_str" ]]; then
+                    if [[ "$action" =~ store_.* ]]; then
+                        opt_str="$opt_str"
+                    elif [[ -n "$action" && "$action" != append ]]; then
+                        _xargparse_die "unknown action \"$action\""
+                    else
+                        opt_str="$opt_str ${dest^^}"
+                    fi
+                    if [[ -n "$default" ]]; then
+                        opt_str="$opt_str ($default)"
+                    fi
+
+                    opts_str="$opts_str\n$(_xargparse_print_subcmd "$opt_str" "$help")"
+                else
+                    if [[ "$nargs" == '+' ]]; then
+                        if [[ -n "$default" ]]; then
+                            pos_str="[${pos:-$dest}...${choices_str} ($default)]"
+                        else
+                            pos_str="${pos:-$dest}...${choices_str}"
+                        fi
+                    elif [[ "$nargs" == '*' ]]; then
+                        if [[ -n "$default" ]]; then
+                            pos_str="[${pos:-$dest}...${choices_str} ($default)]"
+                        else
+                            pos_str="[${pos:-$dest}...${choices_str}]"
+                        fi
+                    elif [[ "$nargs" == '?' ]]; then
+                        if [[ -n "$default" ]]; then
+                            pos_str="[${pos:-$dest}${choices_str} ($default)]"
+                        else
+                            pos_str="[${pos:-$dest}${choices_str}]"
+                        fi
+                    else
+                        if [[ -n "$default" ]]; then
+                            pos_str="[${pos:-$dest}${choices_str} ($default)]"
+                        else
+                            pos_str="${pos:-$dest}${choices_str}"
+                        fi
+                    fi
+                    
+                    poss_str="$poss_str\n$(_xargparse_print_subcmd "$pos_str" "$help")"
+                    
+                fi
             fi
-
-
         done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
-        /^function $func\(\)/,/^}/ { 
+        H
+        x
+        /^#@[[:space:]]*(.*)\nfunction [[:space:]]*($funcname)\(\).*/ {
+            s//section=1;func=\2;\1/
+            p
+            : loop_2
+            n
+            /^}/d
             ${XARGPARES_REGEXP_SECTION2}
+
+            b loop_2
         }")
 
-        printf "usage: $(basename $XARGPARES_CMD_SRC) ${alia:-$func} [options] [args] 
+        printf "$label_str
+usage: $(basename $XARGPARES_CMD_SRC) ${funcname} [options] [args] 
 ${poss_str:+"Valid args:"}${poss_str}${poss_str:+\n}
 ${opts_str:+"Valid options:"}${opts_str}
 "
@@ -636,8 +654,9 @@ ${opts_str:+"Valid options:"}${opts_str}
 
 function main()
 {
-    shopt -qo xtrace && set +x && local XTRACE=true
-    [[ $- == *e* ]] && set +e && local XERREXIT=true
+    local XTRACE XERREXIT
+    shopt -qo xtrace && set +x && XTRACE=true
+    [[ $- == *e* ]] && set +e && XERREXIT=true
 
     _xargparse_cmd_src
 
@@ -659,6 +678,7 @@ function main()
 
             ${XARGPARES_DEBUG:-false} &&  echo "before: args=${xargparse_main_args[*]}" 
             "$func" "${xargparse_main_args[@]}"
+            set +x
             ${XARGPARES_DEBUG:-false} &&  echo "after: args=${xargparse_main_args[@]}"
         
         done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
