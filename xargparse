@@ -384,7 +384,6 @@ function parse_args(){
     shopt -qo xtrace && set +x && XTRACE=true
     [[ $- == *e* ]] && set +e && XERREXIT=true
     _xargparse_cmd_src
-
     local funcname=""
     for funcname in "${FUNCNAME[@]}"; do
         if [[ "$funcname" != "parse_args" && "$funcname" != "____" ]]; then
@@ -412,7 +411,6 @@ function parse_args(){
         fi
         eval $line
     }
-
 
     function _func_usage()
     {
@@ -527,7 +525,7 @@ ${opts_str:+"Valid options:"}${opts_str}
         [[ -n "$long" ]] && l_optspecs["$long"]="$line"
 
     done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
-    /^function $func\(\)/,/^}/ { 
+    /^function $funcname\(\)/,/^}/ { 
         ${XARGPARES_REGEXP_SECTION2}
     }")
 
