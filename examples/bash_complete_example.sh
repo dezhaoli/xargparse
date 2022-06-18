@@ -7,32 +7,35 @@
 XARGPARES_CMD_SRC="$(realpath $0)"  # This line is not needed if your command is already in $PATH
 
 
-# source xargparse by:
 . $(dirname $0)/../xargparse
 
-# or by: 
-# [[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)" #(recommend)
 
-#@
-function simple_fun_1()
+
+
+
+
+#@ help='example of choices'
+function complete_filter_fun()
 {
-	a=               #@ 
-	____ "$@"
-
-
-	echo "a=$a"
-}
-
-#@
-function simple_fun_2()
-{
-    local a=A        #@ 
-    b=B              #@ 
+    local dir_pos=''            #@ filter='-dir'
+    local file_pos=''           #@ filter='sh'
     ____ "$@"
 
 
-    echo "a=$a"
-    echo "b=$b"
+    echo "dir_pos=$dir_pos"
+    echo "file_pos=$file_pos"
+}
+
+
+#@ group=aa
+function auto_completion_1()
+{
+	echo "auto_completion_1 called!"
+}
+#@ group=aa
+function auto_completion_2()
+{
+	echo "auto_completion_2 called!"
 }
 
 

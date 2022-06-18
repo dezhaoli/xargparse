@@ -17,7 +17,7 @@ XARGPARES_CMD_SRC="$(realpath $0)"  # This line is not needed if your command is
 #@ help="tips for function"
 function tips_fun()
 {
-	local a= 		#@ help='tips for argument'
+	a= 		#@ help='tips for argument'
 	____ "$@"
 
 
@@ -25,12 +25,11 @@ function tips_fun()
 }
 
 
-
 #@ help='example of action store'
 function store_fun()
 {
-    local is_force=false                        #@ '-f';action='store_true'
-    local v=value                               #@ '-v';action='store_some_other_value'
+    is_force=false                        #@ '-f';action='store_true'
+    v=value                               #@ '-v';action='store_some_other_value'
     ____ "$@"
 
     echo "is_force=$is_force"
@@ -41,7 +40,7 @@ function store_fun()
 #@ help='example of action append'
 function append_fun()
 {
-    local v=( good luck )                       #@ '-v';action='append'
+    v=( good luck )                       #@ '-v';action='append'
     ____ "$@"
 
     for i in "${v[@]}" ; do echo "v=>$i";done
@@ -51,15 +50,14 @@ function append_fun()
 #@ help='example of choices'
 function choices_fun()
 {
-    local mode=''           #@ -m; choices=('release' 'debug');help='choice mode'
-    local fruit=''          #@ choices=( apple orange banana );help='choice fruit'
+    mode=           #@ -m; choices=('release' 'debug');help='choice mode'
+    fruit=          #@ choices=( apple orange banana );help='choice fruit'
     ____ "$@"
 
 
     echo "mode=$mode"
     echo "fruit=$fruit"
 }
-
 
 
 #@ alia="rename_fun"; help='Function Destcription.'; flag='*'
@@ -89,16 +87,18 @@ function complicated_fun()
 #TODO: support group title and message
 ##@@ kind='group'; help='some message'
 
-#@ group=aa
-function auto_completion_1()
+#@ group=aa help="group aa's function"
+function grouped_fun_1()
 {
-	echo "auto_completion_1 called!"
+	echo "grouped_fun_1 called!"
 }
 #@ group=aa
-function auto_completion_2()
+function grouped_fun_2()
 {
-	echo "auto_completion_2 called!"
+	echo "grouped_fun_2 called!"
 }
+
+
 
 #@
 function test_main_ex()

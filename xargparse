@@ -498,6 +498,7 @@ function parse_args(){
 
         printf "$label_str
 usage: $(basename $XARGPARES_CMD_SRC) ${funcname} [options] [args] 
+
 ${poss_str:+"Valid args:"}${poss_str}${poss_str:+\n}
 ${opts_str:+"Valid options:"}${opts_str}
 "
