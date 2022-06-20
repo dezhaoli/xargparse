@@ -32,7 +32,7 @@
 # XARGPARES_USE_BASH_ARGV
 
 
-XARGPARES_VERSION=1.1.1
+XARGPARES_VERSION=2.2.0
 
 
 XARGPARES_REGEXP_SECTION2="
@@ -425,7 +425,11 @@ function parse_args(){
 
             ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
             if (( $section == 1)); then
-                label_str="$func${alia:+ (}$alia${alia:+)}${help:+: }${help}"
+                if [[ $funcname == _main ]]; then
+                    label_str="${help}${help:+\n}"
+                else
+                    label_str="$func${alia:+ (}$alia${alia:+)}${help:+: }${help}${help:+\n}"
+                fi
             else
 
                 local opt_str=
@@ -496,8 +500,11 @@ function parse_args(){
             b loop_2
         }")
 
-        printf "$label_str
-usage: $(basename $XARGPARES_CMD_SRC) ${funcname} [options] [args] 
+        if [[ $funcname == _main ]]; then
+            funcname=
+        fi
+
+        printf "${label_str}usage: $(basename $XARGPARES_CMD_SRC)${funcname:+ }${funcname} [options] [args] 
 
 ${poss_str:+"Valid args:"}${poss_str}${poss_str:+\n}
 ${opts_str:+"Valid options:"}${opts_str}
@@ -666,12 +673,24 @@ function main()
     _xargparse_cmd_src
 
     # install bash-complete
-    # if [[ ${#xargparse_main_args[@]} == 1 && "${xargparse_main_args[0]}" == '____' ]]; then
-    local reg_f=~/".xargparse/bash_completion.d/$(basename "$XARGPARES_CMD_SRC")"
-    if [[ ! -f "$reg_f" ]]; then
-        touch "$reg_f"
-        (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
-    fi
+    {
+        local reg_f=~/".xargparse/bash_completion.d/$(basename "$XARGPARES_CMD_SRC")"
+        if [[ ! -f "$reg_f" ]]; then
+            touch "$reg_f"
+            (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
+        fi
+    }
+
+    # case single command
+    command -v "_main" >/dev/null 2>&1 && {
+        if [[ $# == 1 && "$1" == 'help' ]]; then
+            _main -h  >&2
+            exit 0
+        fi
+        _main "$@"
+        exit
+    }
+
 
     XARGPARES_USE_BASH_ARGV=false
     eval local ${XARGPARES_Class_Function_Signature}
