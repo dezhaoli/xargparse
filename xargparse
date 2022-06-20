@@ -569,6 +569,7 @@ ${opts_str:+"Valid options:"}${opts_str}
     # parse the argument here
     local is_force_pos=false
     local p_index=0
+    local is_back=false
     while (( "$#" )); do
         local x_i_x="$1" # NOTE: be careful, the name should be complicated here to avoid conflict
         shift
@@ -599,10 +600,12 @@ ${opts_str:+"Valid options:"}${opts_str}
         if [[ -z "$short" && -z "$long" ]]; then # positional argument
             if [[ "$nargs" == '+' || "$nargs" == '*' ]]; then
                 _set_array_val
+                is_back=false
                 while (( "$#" )); do
                     x_i_x="$1"
                     if [[ "${x_i_x}" =~ ^--?[-a-zA-Z0-9_]*$ ]]; then
                         ((p_index--))
+                        is_back=true
                         break
                     fi
                     shift
@@ -630,6 +633,8 @@ ${opts_str:+"Valid options:"}${opts_str}
             fi
         fi
     done
+
+    $is_back && ((p_index++))
 
     while ((p_index < ${#p_argspecs[@]})); do
         _reset_arg
