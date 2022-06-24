@@ -249,7 +249,7 @@ function _xargparse_usage_verbose()
                     opt_str="$long"
                 fi
                 if [[ -n "$opt_str" ]]; then
-                    if [[ "$action" =~ store_.* ]]; then
+                    if [[ "$action" =~ ^store_.* ]]; then
                         opt_str="$opt_str"
                     elif [[ -n "$action" && "$action" != append ]]; then
                         _xargparse_die "unknown action \"$action\""
@@ -311,7 +311,7 @@ function _xargparse_usage_verbose()
                 _xargparse_die "unsupported use of positional arguments in main-ex. line: $line"
             fi
 
-            if [[ "$action" =~ store_.* ]]; then
+            if [[ "$action" =~ ^store_.* ]]; then
                 opt_str="$opt_str"
             elif [[ -n "$action" && "$action" != append ]]; then
                 _xargparse_die "unknown action \"$action\""
@@ -443,7 +443,7 @@ function parse_args(){
                     opt_str="$long"
                 fi
                 if [[ -n "$opt_str" ]]; then
-                    if [[ "$action" =~ store_.* ]]; then
+                    if [[ "$action" =~ ^store_.* ]]; then
                         opt_str="$opt_str"
                     elif [[ -n "$action" && "$action" != append ]]; then
                         _xargparse_die "unknown action \"$action\""
@@ -633,7 +633,7 @@ ${opts_str:+"Valid options:"}${opts_str}
                 _set_val
             fi
         else                                                                                # optional argument:
-            if [[ "$action" =~ store_.* ]];then                                             # store_
+            if [[ "$action" =~ ^store_.* ]];then                                             # store_
                 x_i_x=${action##store_}
                 _set_val
             elif [[ "$action" == append ]];then                                             # append
