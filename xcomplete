@@ -235,9 +235,9 @@ function _xcomplete()
         # standard options
         COMPREPLY=( $( compgen -W "${sub_cmd_opts[*]}" -- "$cur" ) )
         return 0
-    elif [[ "$prev" =~ --.* ]]; then
+    elif [[ "$prev" =~ ^--.* ]]; then
         line="${l_optspecs["${x_i_x}"]}"
-    elif [[ "$prev" =~ -.* ]]; then
+    elif [[ "$prev" =~ ^-.* ]]; then
         line="${s_optspecs["${x_i_x}"]}"
     elif ((p_index < ${#p_argspecs[@]})); then
         line="${p_argspecs[$p_index]}"
