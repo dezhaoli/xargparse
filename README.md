@@ -39,9 +39,10 @@ Here is an example of the output when running from the ./examples/simple_example
 
 Let's take a more complicated example
 
-./examples/cmd.sh
+./examples/detailed_example.sh
 
 ```shell
+...
 #@ alia="rename_fun"; help='Function Destcription.'; flag='*'
 function complicated_fun()
 {
@@ -64,53 +65,14 @@ function complicated_fun()
     for i in "${res_list[@]}" ; do echo "=>$i";done
 
 }
+...
 ```
 
-And now the output:
+And now the output of help and usage messages:
 
-```shell
-$ ./cmd.sh
-usage: cmd.sh <command> [-h] [options] [positional arguments]
-command:
-    simple_fun [a] [b]
-  * rename_fun [-v|--version arg] [-f] [--key arg]  file [path] [workspace] [others...]  #Function Destcription.
-$
-$ ./cmd.sh rename_fun
-usage: cmd.sh rename_fun [-h] [options] [positional arguments]
-options:
-    -v, --version arg (2.0.0)                                                        #option 1's description
-    -f (false)                                                                       #option 2's description
-    --key arg (/Users/dezhaoli)                                                      #key's description
-positional arguments:
-    file                                                                             #f_file_name's description
-    [path (/)]                                                                       #path's description
-    [workspace (eeeee)]                                                              #ws's description
-    [others...]                                                                      #res_list's description
+![detail](https://user-images.githubusercontent.com/23163073/177007375-a6af11c9-6245-432d-8cb3-d0ba4cdba844.gif)
 
-error: the following arguments are required: file
-$ ./cmd.sh rename_fun a.apk
-version=2.0.0
-is_force=false
-key=/Users/dezhaoli
-file=a.apk
-path=/
-ws=eeeee
-$ ./cmd.sh rename_fun a.apk /root/usr/
-version=2.0.0
-is_force=false
-key=/Users/dezhaoli
-file=a.apk
-path=/root/usr/
-ws=eeeee
-$ ./cmd.sh rename_fun a.apk /root/usr/ apks
-version=2.0.0
-is_force=false
-key=/Users/dezhaoli
-file=a.apk
-path=/root/usr/
-ws=apks
 
-```
 
 Conclusion
 
