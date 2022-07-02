@@ -25,7 +25,6 @@
 
 
 
-
 # : ${XARGPARES_DEBUG:=false}
 # XARGPARES_MAIN_EX_NAME='main-ex'
 # XARGPARES_LABEL_NAME='label'
@@ -176,7 +175,7 @@ function _xargparse_usage_verbose()
 
     local is_verbose=${1:-true}
 
-    _xargparse_cmd_src
+    # _xargparse_cmd_src
 
     #TODO: support group's title and message 
     local -A groups
@@ -384,7 +383,7 @@ function parse_args(){
     local XTRACE XERREXIT
     shopt -qo xtrace && set +x && XTRACE=true
     [[ $- == *e* ]] && set +e && XERREXIT=true
-    _xargparse_cmd_src
+    # _xargparse_cmd_src
     local funcname=""
     for funcname in "${FUNCNAME[@]}"; do
         if [[ "$funcname" != "parse_args" && "$funcname" != "____" ]]; then
@@ -716,7 +715,7 @@ function main()
     shopt -qo xtrace && set +x && XTRACE=true
     [[ $- == *e* ]] && set +e && XERREXIT=true
  
-    _xargparse_cmd_src
+    # _xargparse_cmd_src
 
     # install bash-complete
     {
@@ -789,9 +788,12 @@ function main()
 }
 
 # call ourself
-if [[ ! "$0" =~ ^-.* &&  # case call from -bash
-    "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
-    echo "$(basename "$0") $XARGPARES_VERSION"
-    _xargparse_usage_concise
+if [[ ! "$0" =~ ^-.* ]]; then  # case call from -bash
+    _xargparse_cmd_src
+    if [[  "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
+        echo "$(basename "$0") $XARGPARES_VERSION"
+        _xargparse_usage_concise
+    fi
+
 fi
 
