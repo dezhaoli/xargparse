@@ -6,6 +6,7 @@ Parser for command-line options, arguments and sub-commands. auto create command
 The `xargparse` makes it easy to write user-friendly command-line interfaces like what `argparse` does for python. The program defines what arguments it requires, and xargparse will figure out how to parse those out of BASH_ARGV. The `xargparse` also automatically generates help and usage messages and issues errors when users give the program invalid arguments.
 
 ![auto_completion_demo](https://user-images.githubusercontent.com/23163073/172112615-93d69969-041c-45ce-9515-66cee4fe2d0e.gif)
+![Jul-02-2022 22-59-19](https://user-images.githubusercontent.com/23163073/177005855-5012f9c3-fdfa-428c-bc83-0b1b484f13ce.gif)
 
 
 Example
