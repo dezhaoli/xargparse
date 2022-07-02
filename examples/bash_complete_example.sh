@@ -4,39 +4,37 @@
 # @Date:   
 # Please contact dezhaoli if you have any questions.
 ###########################################################
-XARGPARES_CMD_SRC="$(realpath $0)"  # This line is not needed if your command is already in $PATH
-
-
-. $(dirname $0)/../xargparse
+# . $(dirname $0)/../xargparse   # for test only
 
 
 
 
 
 
-#@ help='example of choices'
-function complete_filter_fun()
-{
-    local dir_pos=''            #@ filter='-dir'
-    local file_pos=''           #@ filter='sh'
-    ____ "$@"
+[[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
 
-
-    echo "dir_pos=$dir_pos"
-    echo "file_pos=$file_pos"
-}
-
-
-#@ group=aa
+#@ 
 function auto_completion_1()
 {
 	echo "auto_completion_1 called!"
 }
-#@ group=aa
+#@ 
 function auto_completion_2()
 {
 	echo "auto_completion_2 called!"
 }
 
 
-main "$@"
+#@ 
+function auto_completion_3()
+{
+    fruit=          #@ choices=( apple orange banana );help='choice fruit'
+    cmd=            #@ choices=( eat package cook )
+    ____ "$@"
+
+    echo ":$cmd $fruit."
+}
+
+
+
+"$@"

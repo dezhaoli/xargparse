@@ -4,29 +4,19 @@
 # @Date:   
 # Please contact dezhaoli if you have any questions.
 ###########################################################
-XARGPARES_CMD_SRC="$(realpath $0)"  # This line is not needed if your command is already in $PATH
+# . $(dirname $0)/../xargparse   # for test only
 
 
-# source xargparse by:
-. $(dirname $0)/../xargparse
-
-# or by: 
-# [[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)" #(recommend)
-
-#@
-function simple_fun_1()
-{
-	a=               #@ 
-	____ "$@"
 
 
-	echo "a=$a"
-}
+
+
+[[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
 
 #@
-function simple_fun_2()
+function simple_fun()
 {
-    local a=A        #@ 
+    a=A              #@ 
     b=B              #@ 
     ____ "$@"
 
@@ -35,5 +25,33 @@ function simple_fun_2()
     echo "b=$b"
 }
 
-
 main "$@"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

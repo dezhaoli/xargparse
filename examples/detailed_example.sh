@@ -4,14 +4,14 @@
 # @Date:   
 # Please contact dezhaoli if you have any questions.
 ###########################################################
-XARGPARES_CMD_SRC="$(realpath $0)"  # This line is not needed if your command is already in $PATH
+# XARGPARES_CMD_SRC="$(realpath $0)"  # This line is not needed if your command is already in $PATH
 
 
 # source xargparse by:
-. $(dirname $0)/../xargparse
+[[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)" #(recommend)
 
 # or by: 
-# [[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)" #(recommend)
+# . $(dirname $0)/../xargparse
 
 
 #@ help="tips for function"
@@ -63,7 +63,6 @@ function choices_fun()
 #@ alia="rename_fun"; help='Function Destcription.'; flag='*'
 function complicated_fun()
 {
-    # set -x
     local version="2.0.0"                       #@ -v; --version ;help="option 1's description"
     local is_force=false                        #@ '-f';action='store_true';help="option 2's description"
     local key=~                                 #@ "--key"; help="key's description"
@@ -119,6 +118,7 @@ function test_main_ex()
 function main-ex()
 {
 	author="dezhaoli"	#@ -b; help="set author"
+    # local ws=''             #@ 
     ____ "$@"
 	
 
