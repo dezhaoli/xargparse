@@ -427,7 +427,7 @@ function parse_args(){
                 if [[ $funcname == _main ]]; then
                     label_str="${help}${help:+\n}"
                 else
-                    label_str="$func${alia:+ (}$alia${alia:+)}${help:+: }${help}${help:+\n}"
+                    label_str="$func${alia:+ (}$alia${alia:+)}${help:+: }${help}$\n"
                 fi
             else
 
