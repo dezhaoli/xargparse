@@ -25,10 +25,12 @@
 
 
 
-# : ${XARGPARES_DEBUG:=false}
+# XARGPARES_DEBUG=true
 # XARGPARES_MAIN_EX_NAME='main-ex'
+# XARGPARES_MAIN_NAME='_main'
 # XARGPARES_LABEL_NAME='label'
 # XARGPARES_USE_BASH_ARGV
+# XARGPARES_SMART_MODE=false
 
 
 XARGPARES_VERSION=2.2.0
@@ -368,6 +370,25 @@ function ____()
             fi
             args[${#args[@]}]="$arg"
         done
+        set -- "${args[@]}"
+    fi
+
+
+    if ${XARGPARES_SMART_MODE:-true}; then
+        local args=()
+        END_OF_OPT=
+        while (( "$#" )); do
+          local arg="$1"
+          shift
+          case "${END_OF_OPT}${arg}" in
+            --) args+=("$arg"); END_OF_OPT=1 ;;
+            --*=*)args+=("${arg%%=*}" "${arg#*=}") ;;
+            --*) args+=("$arg") ;;
+            -*) for i in $(seq 2 ${#arg}); do args+=("-${arg:i-1:1}"); done ;;
+            *) args+=("$arg") ;;
+          esac
+        done
+
         set -- "${args[@]}"
     fi
 
