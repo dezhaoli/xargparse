@@ -66,7 +66,10 @@ function _xcomplete()
 
     COMPREPLY=()
 
-    local cmd_path="$(which "${words[0]}")"
+    local dir=~/".xargparse/bash_completion.d"
+
+    local XARGPARES_CMD_SRC=() p=
+    while read p; do XARGPARES_CMD_SRC+=( "$p" ); done < <(cat $dir/"$(basename "${words[0]}")")
     local sub_cmd=
     local sub_cmd_list=( help )
     local -A sub_cmd_alias_map
@@ -114,7 +117,7 @@ function _xcomplete()
             [[ -n "$long" ]] && l_optspecs["$long"]="$line"
         fi
 
-        done< <(< "$cmd_path" sed  -nE "$XARGPARES_REGEXP_ALL_SECTION")
+        done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "$XARGPARES_REGEXP_ALL_SECTION")
 
     }
 
@@ -133,7 +136,7 @@ function _xcomplete()
             [[ -n "$short" ]] && s_optspecs["$short"]="$line"
             [[ -n "$long" ]] && l_optspecs["$long"]="$line"
 
-        done< <(< "$cmd_path" sed  -nE "
+        done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
         /^function $sub_cmd\(\)/,/^}/ { 
             ${XARGPARES_REGEXP_SECTION2}
         }")

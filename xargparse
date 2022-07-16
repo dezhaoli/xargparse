@@ -150,10 +150,15 @@ function _xargparse_die()
 
 function _xargparse_cmd_src()
 {
-    : ${XARGPARES_CMD_SRC:="$0"}
-    [[ -r "$XARGPARES_CMD_SRC" ]] || _xargparse_die "target cmd [$XARGPARES_CMD_SRC] not found"
+    [[ -n "$XARGPARES_CMD_SRC" ]] && return
 
-    XARGPARES_CMD_SRC="$(realpath "$XARGPARES_CMD_SRC")"   # convert to absolute path
+    XARGPARES_CMD_SRC=()
+    local src
+    for src in ${BASH_SOURCE[@]:2}; do
+        [[ -r "$src" ]] || _xargparse_die "target cmd [$src] not found"
+        XARGPARES_CMD_SRC+=( "$(realpath "$src")" ) # convert to absolute path
+    done
+
 }
 
 function _xargparse_class_to_string()
@@ -177,7 +182,6 @@ function _xargparse_usage_verbose()
 
     local is_verbose=${1:-true}
 
-    # _xargparse_cmd_src
 
     #TODO: support group's title and message 
     local -A groups
@@ -330,7 +334,7 @@ function _xargparse_usage_verbose()
         else
             _xargparse_die "unknown line: [$line]"
         fi
-    done< <(< "$XARGPARES_CMD_SRC" sed  -nE "$XARGPARES_REGEXP_ALL_SECTION")
+    done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "$XARGPARES_REGEXP_ALL_SECTION")
     $is_verbose && print_last
 
     local group_str g
@@ -338,8 +342,8 @@ function _xargparse_usage_verbose()
         group_str="$(eval printf "%s\\\n" \""\${${g}[@]}"\"| sort -k 1.4)\n\n$group_str"
     done
 
-    printf "usage: $(basename $XARGPARES_CMD_SRC) <subcommand> [options] [args]
-Type '$(basename $XARGPARES_CMD_SRC) <subcommand> -h' for help on a specific subcommand.
+    printf "usage: $(basename ${XARGPARES_CMD_SRC[-1]}) <subcommand> [options] [args]
+Type '$(basename ${XARGPARES_CMD_SRC[-1]}) <subcommand> -h' for help on a specific subcommand.
 ${label_str:+\n}$label_str
 Available subcommands:
 $( printf "%s\n" "${subcmds[@]}"| sort -k 1.4)
@@ -404,7 +408,6 @@ function parse_args(){
     local XTRACE XERREXIT
     shopt -qo xtrace && set +x && XTRACE=true
     [[ $- == *e* ]] && set +e && XERREXIT=true
-    # _xargparse_cmd_src
     local funcname=""
     for funcname in "${FUNCNAME[@]}"; do
         if [[ "$funcname" != "parse_args" && "$funcname" != "____" ]]; then
@@ -506,7 +509,7 @@ function parse_args(){
                     
                 fi
             fi
-        done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
+        done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
         H
         x
         /^#@[[:space:]]*(.*)\nfunction [[:space:]]*($funcname)\(\).*/ {
@@ -524,7 +527,7 @@ function parse_args(){
             funcname=
         fi
 
-        printf "${label_str}usage: $(basename $XARGPARES_CMD_SRC)${funcname:+ }${funcname} [options] [args] 
+        printf "${label_str}usage: $(basename ${XARGPARES_CMD_SRC[-1]})${funcname:+ }${funcname} [options] [args] 
 
 ${poss_str:+"Valid args:"}${poss_str}${poss_str:+\n}
 ${opts_str:+"Valid options:"}${opts_str}
@@ -553,7 +556,7 @@ ${opts_str:+"Valid options:"}${opts_str}
         [[ -n "$short" ]] && s_optspecs["$short"]="$line"
         [[ -n "$long" ]] && l_optspecs["$long"]="$line"
 
-    done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
+    done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
     /^function $funcname\(\)/,/^}/ { 
         ${XARGPARES_REGEXP_SECTION2}
     }")
@@ -721,7 +724,7 @@ function xargparse_real_subcmd() # find the real sub command function
             printf -v "${__func_to_find}" "%s" "${func}"
         fi
 
-    done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
+    done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
     H
     x
     /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
@@ -736,14 +739,14 @@ function main()
     shopt -qo xtrace && set +x && XTRACE=true
     [[ $- == *e* ]] && set +e && XERREXIT=true
  
-    # _xargparse_cmd_src
 
     # install bash-complete
     {
-        local reg_f=~/".xargparse/bash_completion.d/$(basename "$XARGPARES_CMD_SRC")"
-        if [[ ! -f "$reg_f" ]]; then
-            touch "$reg_f"
-            (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
+        local reg_f=~/".xargparse/bash_completion.d/$(basename "${XARGPARES_CMD_SRC[-1]}")"
+        if [[ ! -f "$reg_f" || "${XARGPARES_CMD_SRC[-1]}" -nt "$reg_f" ]]; then
+            printf '%s\n' "${XARGPARES_CMD_SRC[@]}" > "$reg_f"
+            # (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
+            (($? == 0 )) || echo "Registered to bash completion: fail"
         fi
     }
 
@@ -772,14 +775,14 @@ function main()
             eval ${XARGPARES_Class_Function_Signature}
             eval $line
 
-            command -v "$func" >/dev/null 2>&1 || _xargparse_die "the function[$func] pointed to by alia[$alia] was not found"
+            command -v "$func" >/dev/null 2>&1 || _xargparse_die "the function[$func] pointed to by kind[$kind] was not found"
 
             ${XARGPARES_DEBUG:-false} &&  echo "before: args=${xargparse_main_args[*]}" 
             "$func" "${xargparse_main_args[@]}"
             set +x
             ${XARGPARES_DEBUG:-false} &&  echo "after: args=${xargparse_main_args[@]}"
         
-        done< <(< "$XARGPARES_CMD_SRC" sed  -nE "
+        done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
         H
         x
         /^##@@[[:space:]]*(kind='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
