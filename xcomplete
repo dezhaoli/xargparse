@@ -24,6 +24,7 @@
 
 function _xcomplete()
 {
+    set +x
     local cur prev words cword i
 
     function _debug_echo(){
