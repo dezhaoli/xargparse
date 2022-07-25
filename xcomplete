@@ -144,6 +144,7 @@ function _xcomplete()
     }
     _parse_global_opt_and_sub_cmd_list
 
+    # find out the matched subcmd
     while (( i < cword )); do
         local x_i_x="${words[i]}"
         ((i++))
@@ -158,13 +159,25 @@ function _xcomplete()
 
     done
 
-    # case 0 sub_cmd;
-    if [[ -z "$sub_cmd" ]]; then
-        COMPREPLY=( $( compgen -W "${sub_cmd_list[*]} ${sub_cmd_opts[*]}" -- "${cur}" ) )
-        return 0
+
+    local is_global_op=false
+    if [[ "$prev" =~ ^--.* ]]; then
+        [[ -n "${l_optspecs["$prev"]}" ]] && is_global_op=true
+    elif [[ "$prev" =~ ^-.* ]]; then
+        [[ -n "${s_optspecs["$prev"]}" ]] && is_global_op=true
     fi
 
-    _parse_sub_cmd_opt
+
+    if ! $is_global_op; then
+        # case 0 sub_cmd;
+        if [[ -z "$sub_cmd" ]]; then
+            COMPREPLY=( $( compgen -W "${sub_cmd_list[*]} ${sub_cmd_opts[*]}" -- "${cur}" ) )
+            return 0
+        fi
+
+        _parse_sub_cmd_opt
+    fi
+
 
     # parse the argument here
     local is_force_pos=false
@@ -253,7 +266,6 @@ function _xcomplete()
     _comp_reply_from_line
     
 }
-
 
 
 function _init()
