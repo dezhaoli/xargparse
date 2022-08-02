@@ -784,7 +784,7 @@ function main()
 
             ${XARGPARES_DEBUG:-false} &&  echo "before: args=${xargparse_main_args[*]}" 
             "$func" "${xargparse_main_args[@]}"
-            set +x
+            shopt -qo xtrace && set +x && XTRACE=true
             ${XARGPARES_DEBUG:-false} &&  echo "after: args=${xargparse_main_args[@]}"
         
         done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
