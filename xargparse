@@ -147,6 +147,11 @@ function _xargparse_die()
     echo -e "error: $msg" >&2
     exit 1
 }
+function _xargparse_has()
+{
+    command -v "$1" >/dev/null 2>&1 
+    return $?
+}
 
 function _xargparse_cmd_src()
 {
@@ -256,7 +261,7 @@ function _xargparse_usage_verbose()
                 if [[ -n "$opt_str" ]]; then
                     if [[ "$action" =~ ^store_.* ]]; then
                         opt_str="$opt_str"
-                    elif [[ -n "$action" && "$action" != append ]]; then
+                    elif [[ -n "$action" && "$action" != append ]] && ! _xargparse_has "$action"; then
                         _xargparse_die "unknown action \"$action\""
                     else
                         opt_str="$opt_str ${dest^^}"
@@ -318,7 +323,7 @@ function _xargparse_usage_verbose()
 
             if [[ "$action" =~ ^store_.* ]]; then
                 opt_str="$opt_str"
-            elif [[ -n "$action" && "$action" != append ]]; then
+            elif [[ -n "$action" && "$action" != append ]] && ! _xargparse_has "$action"; then
                 _xargparse_die "unknown action \"$action\""
             else
                 opt_str="$opt_str ${dest^^}"
@@ -468,7 +473,7 @@ function parse_args(){
                 if [[ -n "$opt_str" ]]; then
                     if [[ "$action" =~ ^store_.* ]]; then
                         opt_str="$opt_str"
-                    elif [[ -n "$action" && "$action" != append ]]; then
+                    elif [[ -n "$action" && "$action" != append ]] && ! _xargparse_has "$action"; then
                         _xargparse_die "unknown action \"$action\""
                     else
                         opt_str="$opt_str ${dest^^}"
@@ -664,7 +669,7 @@ ${opts_str:+"Valid options:"}${opts_str}
                 x_i_x="$1"
                 shift
                 _set_array_val
-            elif [[ -n "$action" ]]; then                                                   # custom action
+            elif [[ -n "$action" ]] && ! _xargparse_has "$action"; then                                                   # custom action
                 _die "unknown action \"$action\""
             else                                                                            # set key value
                 (($#)) || _die "argument ${x_i_x}: expected one argument"
@@ -751,7 +756,7 @@ function main()
     }
 
     # case single command
-    command -v "_main" >/dev/null 2>&1 && {
+    _xargparse_has "_main" && {
         if [[ $# == 1 && "$1" == 'help' ]]; then
             _main -h  >&2
             exit 0
@@ -775,7 +780,7 @@ function main()
             eval ${XARGPARES_Class_Function_Signature}
             eval $line
 
-            command -v "$func" >/dev/null 2>&1 || _xargparse_die "the function[$func] pointed to by kind[$kind] was not found"
+            _xargparse_has "$func" || _xargparse_die "the function[$func] pointed to by kind[$kind] was not found"
 
             ${XARGPARES_DEBUG:-false} &&  echo "before: args=${xargparse_main_args[*]}" 
             "$func" "${xargparse_main_args[@]}"

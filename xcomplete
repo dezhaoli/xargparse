@@ -228,8 +228,12 @@ function _xcomplete()
 
     function _comp_reply_from_line()
     {
+        local cmd="${XARGPARES_CMD_SRC[-1]}"
         if ((${#choices[@]})); then
             COMPREPLY=( $( compgen -W "${choices[*]}" -- "$cur" ) )
+        elif [[ -n "$action" ]] && "$cmd" _xargparse_has "$action"; then
+            local tmp_arg_choices=( $( "$cmd" "$action" ) )
+            COMPREPLY=( $( compgen -W "${tmp_arg_choices[*]}" -- "$cur" ) )
         else
             _debug_echo "$filter"
             if [[ "$filter" == -dir ]]; then
