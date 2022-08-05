@@ -813,7 +813,6 @@ function main()
 
     "${xargparse_main_args[@]}"
 
-    unset xargparse_main_args
 }
 
 # call ourself
