@@ -661,7 +661,7 @@ ${opts_str:+"Valid options:"}${opts_str}
                 _set_val
             fi
         else                                                                                # optional argument:
-            if [[ "$action" =~ ^store_.* ]];then                                             # store_
+            if [[ "$action" =~ ^store_.* ]];then                                            # store_
                 x_i_x=${action##store_}
                 _set_val
             elif [[ "$action" == append ]];then                                             # append
@@ -669,7 +669,7 @@ ${opts_str:+"Valid options:"}${opts_str}
                 x_i_x="$1"
                 shift
                 _set_array_val
-            elif [[ -n "$action" ]] && ! _xargparse_has "$action"; then                                                   # custom action
+            elif [[ -n "$action" ]] && ! _xargparse_has "$action"; then                     # custom action
                 _die "unknown action \"$action\""
             else                                                                            # set key value
                 (($#)) || _die "argument ${x_i_x}: expected one argument"
@@ -820,7 +820,6 @@ if [[ ! "$0" =~ ^-.* ]]; then  # case call from -bash
     _xargparse_cmd_src
     if [[  "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
         echo "$(basename "$0") $XARGPARES_VERSION"
-        _xargparse_usage_concise
     fi
 
 fi

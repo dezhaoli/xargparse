@@ -24,6 +24,9 @@
 
 function _xcomplete()
 {
+    local XTRACE
+    shopt -qo xtrace && set +x && XTRACE=true
+
     local cur prev words cword i
 
     function _debug_echo(){
@@ -172,6 +175,8 @@ function _xcomplete()
         # case 0 sub_cmd;
         if [[ -z "$sub_cmd" ]]; then
             COMPREPLY=( $( compgen -W "${sub_cmd_list[*]} ${sub_cmd_opts[*]}" -- "${cur}" ) )
+
+            ${XTRACE:-false} && set -x
             return 0
         fi
 
@@ -270,6 +275,7 @@ function _xcomplete()
     _parse_line || return 0  #argument missing definition
     _comp_reply_from_line
     
+    ${XTRACE:-false} && set -x
 }
 
 
