@@ -368,37 +368,37 @@ function ____()
     [[ $- == *e* ]] && set +e && XERREXIT=true
 
     if (($#==0)) && ${XARGPARES_USE_BASH_ARGV:-true}; then
-        local offset=1
-        local args=()
-        local i=${#BASH_ARGV[@]}
-        while (( i - offset > 0 )); do
-            local arg="${BASH_ARGV[i - 1 - $offset]}"
-            ((i=i-1))
-            if [[ " ${XARGPARES_IGNORE_BASH_ARGV[*]} " =~ " $arg " ]]; then # TODO: remove this ugly code
+        local xargparse_offset=1
+        local xargparse_args=()
+        local xargparse_i=${#BASH_ARGV[@]}
+        while (( xargparse_i - xargparse_offset > 0 )); do
+            local xargparse_arg="${BASH_ARGV[xargparse_i - 1 - $xargparse_offset]}"
+            ((xargparse_i=xargparse_i-1))
+            if [[ " ${XARGPARES_IGNORE_BASH_ARGV[*]} " =~ " $xargparse_arg " ]]; then # TODO: remove this ugly code
                 continue
             fi
-            args[${#args[@]}]="$arg"
+            xargparse_args[${#xargparse_args[@]}]="$xargparse_arg"
         done
-        set -- "${args[@]}"
+        set -- "${xargparse_args[@]}"
     fi
 
 
     if ${XARGPARES_SMART_MODE:-true}; then
-        local args=()
+        local xargparse_args=()
         END_OF_OPT=
         while (( "$#" )); do
-          local arg="$1"
+          local xargparse_arg="$1"
           shift
-          case "${END_OF_OPT}${arg}" in
-            --) args+=("$arg"); END_OF_OPT=1 ;;
-            --*=*)args+=("${arg%%=*}" "${arg#*=}") ;;
-            --*) args+=("$arg") ;;
-            -*) for i in $(seq 2 ${#arg}); do args+=("-${arg:i-1:1}"); done ;;
-            *) args+=("$arg") ;;
+          case "${END_OF_OPT}${xargparse_arg}" in
+            --) xargparse_args+=("$xargparse_arg"); END_OF_OPT=1 ;;
+            --*=*)xargparse_args+=("${xargparse_arg%%=*}" "${xargparse_arg#*=}") ;;
+            --*) xargparse_args+=("$xargparse_arg") ;;
+            -*) for xargparse_i in $(seq 2 ${#xargparse_arg}); do xargparse_args+=("-${xargparse_arg:xargparse_i-1:1}"); done ;;
+            *) xargparse_args+=("$xargparse_arg") ;;
           esac
         done
 
-        set -- "${args[@]}"
+        set -- "${xargparse_args[@]}"
     fi
 
     parse_args "$@"
@@ -782,10 +782,10 @@ function main()
 
             _xargparse_has "$func" || _xargparse_die "the function[$func] pointed to by kind[$kind] was not found"
 
-            ${XARGPARES_DEBUG:-false} &&  echo "before: args=${xargparse_main_args[*]}" 
+            ${XARGPARES_DEBUG:-false} &&  echo "before: xargparse_main_args=${xargparse_main_args[*]}" 
             "$func" "${xargparse_main_args[@]}"
             shopt -qo xtrace && set +x && XTRACE=true
-            ${XARGPARES_DEBUG:-false} &&  echo "after: args=${xargparse_main_args[@]}"
+            ${XARGPARES_DEBUG:-false} &&  echo "after: xargparse_main_args=${xargparse_main_args[@]}"
         
         done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
         H
