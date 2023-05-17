@@ -30,7 +30,7 @@ function _xcomplete()
     local cur prev words cword i
 
     function _debug_echo(){
-        # echo "$*" >> ~/Desktop/complete.log
+        ${XARGPARES_DEBUG:-false} && echo "$*" >> ~/Desktop/complete.log
         :
     }
 
@@ -170,7 +170,6 @@ function _xcomplete()
         [[ -n "${s_optspecs["$prev"]}" ]] && is_global_op=true
     fi
 
-
     if ! $is_global_op; then
         # case 0 sub_cmd;
         if [[ -z "$sub_cmd" ]]; then
@@ -182,7 +181,6 @@ function _xcomplete()
 
         _parse_sub_cmd_opt
     fi
-
 
     # parse the argument here
     local is_force_pos=false
