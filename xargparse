@@ -35,7 +35,7 @@
 ##################################################
 
 
-XARGPARES_VERSION=2.2.0
+XARGPARES_VERSION=3.0.0
 XARGPARES_COMPLETE_DIR=~/".xargparse/bash_completion.d"
 # XARGPARES_MAIN_EX_NAME='main-ex'
 # XARGPARES_MAIN_NAME='_main'
