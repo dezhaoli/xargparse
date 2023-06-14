@@ -23,17 +23,23 @@
 
 
 
-
+##################################################
+##### the arguments below can be set outside #####
+##################################################
 
 # XARGPARES_DEBUG=true
-# XARGPARES_MAIN_EX_NAME='main-ex'
-# XARGPARES_MAIN_NAME='_main'
-# XARGPARES_LABEL_NAME='label'
-# XARGPARES_USE_BASH_ARGV
-# XARGPARES_SMART_MODE=false
+# XARGPARES_USE_BASH_ARGV=true
+# XARGPARES_SMART_MODE=true
+# XARGPARES_CMD_SRC=()
+# XARGPARES_CMD_SRC_CALL_ORDER=()
+##################################################
 
 
 XARGPARES_VERSION=2.2.0
+XARGPARES_COMPLETE_DIR=~/".xargparse/bash_completion.d"
+# XARGPARES_MAIN_EX_NAME='main-ex'
+# XARGPARES_MAIN_NAME='_main'
+# XARGPARES_LABEL_NAME='label'
 
 
 XARGPARES_REGEXP_SECTION2="
@@ -133,6 +139,7 @@ XARGPARES_Class_Function_Body_Last="
 
 readonly \
         XARGPARES_VERSION \
+        XARGPARES_COMPLETE_DIR \
         XARGPARES_REGEXP_SECTION2 \
         XARGPARES_REGEXP_SECTION5 \
         XARGPARES_REGEXP_ALL_SECTION \
@@ -152,24 +159,31 @@ function _xargparse_has()
     command -v "$1" >/dev/null 2>&1 
     return $?
 }
+function _xargparse_debug_echo(){
+    ${XARGPARES_DEBUG:-false} && echo "$*" >> ~/Desktop/xargparse.log
+    :
+}
+function _xargparse_debug_echo_class(){
+    ${XARGPARES_DEBUG:-false} || return 0
+    local class="${!1}"
+    eval echo "$1:" $(echo "$class" |sed -nE '/([a-z]+)=/s//\1=\"\$\1;\"/g ; /([a-z]+)=.*\(\)/s//\1=\"\(\$\{\1\[\*\]\}\);\"/g;p') >> ~/Desktop/xargparse.log
+    
+}
 
 function _xargparse_cmd_src()
 {
     [[ -n "$XARGPARES_CMD_SRC" ]] && return
 
+    _xargparse_debug_echo "BASH_SOURCE=${BASH_SOURCE[*]}"
     XARGPARES_CMD_SRC=()
-    local src
+    local src full_src
     for src in ${BASH_SOURCE[@]:2}; do
-        [[ -r "$src" ]] || _xargparse_die "target cmd [$src] not found"
-        XARGPARES_CMD_SRC+=( "$(realpath "$src")" ) # convert to absolute path
+        full_src="$(realpath "$src")" || _xargparse_die "target cmd [$src] not found"
+        [[ " ${XARGPARES_CMD_SRC[*]} " =~ " $full_src " ]] && continue
+        XARGPARES_CMD_SRC+=( "$full_src" ) # convert to absolute path
     done
 
-}
-
-function _xargparse_class_to_string()
-{
-    local class="$1"
-    eval echo $(echo "$class" |sed -nE '/([a-z]+)=/s//\1=\"\$\1;\"/g ; /([a-z]+)=.*\(\)/s//\1=\"\(\$\{\1\[\*\]\}\);\"/g;p')
+    _xargparse_debug_echo "XARGPARES_CMD_SRC=${XARGPARES_CMD_SRC[*]}"
 }
 
 function _xargparse_print_subcmd()
@@ -219,11 +233,11 @@ function _xargparse_usage_verbose()
     fi
 
     while read line; do
-        ${XARGPARES_DEBUG:-false} && echo "#usage_verbose#line=[$line]"
+        _xargparse_debug_echo "#usage_verbose# line=[$line]"
         _reset_arg
         eval $line
         if ((section==1)); then
-            ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Signature"
+            _xargparse_debug_echo_class "XARGPARES_Class_Function_Signature"
             if [[ -n "$group" ]]; then
                 if [[ -z "${groups[$group]}" ]]; then
                     groups[$group]=''
@@ -247,7 +261,7 @@ function _xargparse_usage_verbose()
 
             
         elif ((section==2)); then
-            ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
+            _xargparse_debug_echo_class "XARGPARES_Class_Function_Body"
             if $is_verbose; then
                 local opt_str=
                 local pos_str=
@@ -308,7 +322,7 @@ function _xargparse_usage_verbose()
             main_ex_str="${main_ex_str}$help\n"
 
         elif ((section==5)); then
-            ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
+            _xargparse_debug_echo_class "XARGPARES_Class_Function_Body"
 
             local opt_str=
             if [[ -n "$short" && -n "$long" ]]; then
@@ -447,11 +461,11 @@ function parse_args(){
         local opts_str="\n$(_xargparse_print_subcmd "-h, --help" "show this help message and exit")"
         local poss_str=
         while read line; do
-            ${XARGPARES_DEBUG:-false} &&  echo "#func_usage#line=[$line]"
+            _xargparse_debug_echo "#func_usage#line=[$line]"
             _reset_arg
             _parse_line
 
-            ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
+            _xargparse_debug_echo_class "XARGPARES_Class_Function_Body"
             if (( $section == 1)); then
                 if [[ $funcname == _main ]]; then
                     label_str="${help}${help:+\n}"
@@ -552,10 +566,10 @@ ${opts_str:+"Valid options:"}${opts_str}
     fi
     
     while read line; do
-        ${XARGPARES_DEBUG:-false} && echo "#parse_args#line=[$line]"
+        _xargparse_debug_echo "#parse_args# line=[$line]"
         _reset_arg
         _parse_line
-        ${XARGPARES_DEBUG:-false} && _xargparse_class_to_string "$XARGPARES_Class_Function_Body"
+        _xargparse_debug_echo_class "XARGPARES_Class_Function_Body"
 
         [[ -z "$short" && -z "$long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
         [[ -n "$short" ]] && s_optspecs["$short"]="$line"
@@ -635,7 +649,7 @@ ${opts_str:+"Valid options:"}${opts_str}
             line="${p_argspecs[$p_index]}"
             ((p_index++))
         fi
-        ${XARGPARES_DEBUG:-false} && echo "set line=[$line]"
+        _xargparse_debug_echo "set line=[$line]"
 
         
 
@@ -719,7 +733,7 @@ function _xargparse_usage()
         fi
     fi
 }
-function xargparse_real_subcmd() # find the real sub command function
+function _xargparse_real_subcmd() # find the real sub command function
 {
     local __func_to_find="$1"
     while read line; do
@@ -740,6 +754,15 @@ function xargparse_real_subcmd() # find the real sub command function
 }
 function main()
 {
+
+    # _xargparse_debug_echo "main-> [${BASH_SOURCE[*]}]"
+    # only execute the super main
+    if [[ "${#BASH_SOURCE[@]}" != 2 ]]; then
+        return 0
+    fi
+    # _xargparse_debug_echo "main top"
+
+
     local XTRACE XERREXIT
     shopt -qo xtrace && set +x && XTRACE=true
     [[ $- == *e* ]] && set +e && XERREXIT=true
@@ -747,7 +770,7 @@ function main()
 
     # install bash-complete
     {
-        local reg_f=~/".xargparse/bash_completion.d/$(basename "${XARGPARES_CMD_SRC[-1]}")"
+        local reg_f="$XARGPARES_COMPLETE_DIR/$(basename "${XARGPARES_CMD_SRC[-1]}")"
         if [[ ! -f "$reg_f" || "${XARGPARES_CMD_SRC[-1]}" -nt "$reg_f" ]]; then
             printf '%s\n' "${XARGPARES_CMD_SRC[@]}" > "$reg_f"
             # (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
@@ -773,21 +796,20 @@ function main()
 
     # find main-ex function and call it
     {
-        
+        _xargparse_debug_echo "find main-ex in ( ${XARGPARES_CMD_SRC_CALL_ORDER[@]:-${XARGPARES_CMD_SRC[@]}} )"
         XARGPARES_PARSE_MAIN_EX=true
         while read line; do
-            # echo "==>[$line]"
             eval ${XARGPARES_Class_Function_Signature}
             eval $line
 
             _xargparse_has "$func" || _xargparse_die "the function[$func] pointed to by kind[$kind] was not found"
 
-            ${XARGPARES_DEBUG:-false} &&  echo "before: xargparse_main_args=${xargparse_main_args[*]}" 
+            _xargparse_debug_echo "before: xargparse_main_args=${xargparse_main_args[*]}" 
             "$func" "${xargparse_main_args[@]}"
             shopt -qo xtrace && set +x && XTRACE=true
-            ${XARGPARES_DEBUG:-false} &&  echo "after: xargparse_main_args=${xargparse_main_args[@]}"
+            _xargparse_debug_echo "after: xargparse_main_args=${xargparse_main_args[@]}"
         
-        done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
+        done< <(cat "${XARGPARES_CMD_SRC_CALL_ORDER[@]:-${XARGPARES_CMD_SRC[@]}}" | sed  -nE "
         H
         x
         /^##@@[[:space:]]*(kind='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
@@ -805,21 +827,22 @@ function main()
    
     
     local tmp_func_name="${xargparse_main_args[0]}"
-    xargparse_real_subcmd tmp_func_name
+    _xargparse_real_subcmd tmp_func_name
     xargparse_main_args[0]=$tmp_func_name
 
     ${XERREXIT:-false} && set -e
     ${XTRACE:-false} && set -x 
 
+    _xargparse_debug_echo "${xargparse_main_args[@]}..."
     "${xargparse_main_args[@]}"
 
 }
 
-# call ourself
-if [[ ! "$0" =~ ^-.* ]]; then  # case call from -bash
+
+if [[ ! "$0" =~ ^-.* ]]; then  # case not call from -bash
     _xargparse_cmd_src
-    if [[  "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then
-        echo "$(basename "$0") $XARGPARES_VERSION"
+    if [[  "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then # call ourself
+        echo "$(basename "$0") $XARGPARES_VERSION" 
     fi
 
 fi

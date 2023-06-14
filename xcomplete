@@ -69,10 +69,9 @@ function _xcomplete()
 
     COMPREPLY=()
 
-    local dir=~/".xargparse/bash_completion.d"
 
     local XARGPARES_CMD_SRC=() p=
-    while read p; do XARGPARES_CMD_SRC+=( "$p" ); done < <(cat $dir/"$(basename "${words[0]}")")
+    while read p; do XARGPARES_CMD_SRC+=( "$p" ); done < <(cat "$XARGPARES_COMPLETE_DIR/$(basename "${words[0]}")")
     local sub_cmd=
     local sub_cmd_list=( help )
     local -A sub_cmd_alias_map
@@ -279,9 +278,8 @@ function _xcomplete()
 
 function _init()
 {
-    local dir=~/".xargparse/bash_completion.d"
-    mkdir -p "$dir"
     source "$(dirname "$(realpath "$BASH_SOURCE")")/xargparse"
+    mkdir -p "$XARGPARES_COMPLETE_DIR"
 
     while read line; do
         complete -F _xcomplete "$line"
