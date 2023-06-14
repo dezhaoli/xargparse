@@ -283,9 +283,8 @@ function _init()
 
     while read line; do
         complete -F _xcomplete "$line"
-    done < <( ls -1 "$dir" )
+    done < <( ls -1 "$XARGPARES_COMPLETE_DIR" )
 }
-
 if [[ -z "$XARGPARES_VERSION" ]]; then
     _init
 fi
