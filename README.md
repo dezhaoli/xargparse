@@ -88,7 +88,7 @@ Function Signature Keywords:
 |  keyword   |  description  | example
 |  ----  | ----  | ----  |
 |kind| Specify this is a special kind of function. Suported kinds are `main-ex`  `label`  | kind=main-ex, kind=label |
-|alias| Specify a alias for this function, like svn, aliases co as a shorthand for checkout |alia=co |
+|alias| Specify a alias for this function, like svn, aliases co as a shorthand for checkout |alias=co |
 |flag| Used by xcomplete to add a flag to function usage | flag='*'  |
 |help| Help message for an function | help='some message' |
 |group| Used by xcomplete to group the argument help message  | group='xxx'  |
@@ -100,7 +100,7 @@ Note:the keywords listed below are used by xargparse and DONOT used them as argu
 |  keyword   |  description  | example
 |  ----  | ----  | ----  |
 |action| Specify how an argument should be handled. suported actions are `store action`  `append action`  `costom action` | action=store_true, action=store_false, action=store_xxx, action=append,  action=costom_function |
-|alias| Specify a alias for this argument |alia=xxx |
+|alias| Specify a alias for this argument |alias=xxx |
 |choices| Limit values to a specific set of choices |choices=( x x1 x2 ) |
 |nargs| Number of times the argument can be used | nargs=*, nargs=?, nargs=+  |
 |help| Help message for an argument | help='some message' |
