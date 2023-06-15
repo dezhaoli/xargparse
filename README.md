@@ -81,17 +81,30 @@ And now the output of help and usage messages:
 ![detail](https://user-images.githubusercontent.com/23163073/177007375-a6af11c9-6245-432d-8cb3-d0ba4cdba844.gif)
 
 
-Note
+The xargparse use `#@` to mark functions as public subcommads and mark varables as recognized function parameters, and then use some keywords to create argument specifications. It supports positional arguments, options that accept values, and on/off flags
 
-the keywords listed below are used by xargparse and DONOT used them as argument identifier
+Function Signature Keywords:
+
+|  keyword   |  description  | example
+|  ----  | ----  | ----  |
+|kind| Specify this is a special kind of function. Suported kinds are `main-ex`  `label`  | kind=main-ex, kind=label |
+|alias| Specify a alias for this function, like svn, aliases co as a shorthand for checkout |alia=co |
+|flag| Used by xcomplete to add a flag to function usage | flag='*'  |
+|help| Help message for an function | help='some message' |
+|group| Used by xcomplete to group the argument help message  | group='xxx'  |
+
+Function body Keywords:
+
+Note:the keywords listed below are used by xargparse and DONOT used them as argument identifier
 
 |  keyword   |  description  | example
 |  ----  | ----  | ----  |
 |action| Specify how an argument should be handled. suported actions are `store action`  `append action`  `costom action` | action=store_true, action=store_false, action=store_xxx, action=append,  action=costom_function |
+|alias| Specify a alias for this argument |alia=xxx |
 |choices| Limit values to a specific set of choices |choices=( x x1 x2 ) |
 |nargs| Number of times the argument can be used | nargs=*, nargs=?, nargs=+  |
-|help| Help message for an argument |  |
-|filter| Used by xcomplete to filter which files to be list.  | filter='-dir'  |
+|help| Help message for an argument | help='some message' |
+|filter| Used by xcomplete to filter which files to be list.  | filter='-dir', filter='*.zip'  |
 
 
 
