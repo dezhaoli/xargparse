@@ -108,7 +108,7 @@ XARGPARES_Class_Function_Signature="
     x_section=
     x_func=
     kind=
-    alia=
+    alias=
     flag=
     help=
     group=
@@ -130,7 +130,7 @@ XARGPARES_Class_Function_Body_Last="
     x_is_last=false
     x_l_group=
     x_l_func=
-    x_l_alia=
+    x_l_alias=
     x_l_flag=
     x_l_help=
     x_l_opt_str=
@@ -224,7 +224,7 @@ function _xargparse_usage_verbose()
             if $x_is_last; then
                 x_is_last=false
                 eval "$x_l_group+=( \"$(_xargparse_print_subcmd \
-                            "$x_l_func${x_l_alia:+ (}$x_l_alia${x_l_alia:+)}${x_l_opt_str:+ }${x_l_opt_str}${x_l_pos_str:+ }${x_l_pos_str}" \
+                            "$x_l_func${x_l_alias:+ (}$x_l_alias${x_l_alias:+)}${x_l_opt_str:+ }${x_l_opt_str}${x_l_pos_str:+ }${x_l_pos_str}" \
                             "${x_l_help}" \
                             "$x_l_flag")\" )"
             fi
@@ -249,13 +249,13 @@ function _xargparse_usage_verbose()
                 x_is_last=true
                 x_l_group=$group
                 x_l_func="$x_func"
-                x_l_alia=$alia
+                x_l_alias=$alias
                 x_l_help="$help"
                 x_l_flag="$flag"
                 x_l_opt_str=
                 x_l_pos_str=
             else
-                eval "$group+=( \"$(_xargparse_print_subcmd "$x_func${alia:+ (}$alia${alia:+)}" )\" )"
+                eval "$group+=( \"$(_xargparse_print_subcmd "$x_func${alias:+ (}$alias${alias:+)}" )\" )"
             fi
 
             
@@ -469,7 +469,7 @@ function parse_args(){
                 if [[ $funcname == _main ]]; then
                     label_str="${help}${help:+\n}"
                 else
-                    label_str="$x_func${alia:+ (}$alia${alia:+)}${help:+: }${help}\n"
+                    label_str="$x_func${alias:+ (}$alias${alias:+)}${help:+: }${help}\n"
                 fi
             else
 
@@ -739,7 +739,7 @@ function _xargparse_real_subcmd() # find the real sub command function
     while read line; do
         eval local ${XARGPARES_Class_Function_Signature}
         eval local $line
-        if [[ "${!__func_to_find}" == "$alia" ]]; then
+        if [[ "${!__func_to_find}" == "$alias" ]]; then
             printf -v "${__func_to_find}" "%s" "${x_func}"
         fi
 

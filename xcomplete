@@ -107,7 +107,7 @@ function _xcomplete()
             
         if ((section==1)); then
             [[ -n "$func" ]] && sub_cmd_list+=( "$func" )
-            [[ -n "$alia" ]] && sub_cmd_list+=( "$alia" ) && sub_cmd_alias_map["$alia"]="$func"
+            [[ -n "$alias" ]] && sub_cmd_list+=( "$alias" ) && sub_cmd_alias_map["$alias"]="$func"
             
         elif ((section==5)); then
 
