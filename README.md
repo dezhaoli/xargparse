@@ -15,6 +15,9 @@ Let us start with a very simple example
 
 ./examples/simple_example.sh
 ```shell
+
+[[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
+
 #@
 function simple_fun()
 {
@@ -26,11 +29,16 @@ function simple_fun()
     echo "a=$a"
     echo "b=$b"
 }
+
+main "$@"
+
 ```
 All you need to do is:
-1. add `#@` before the function line, 
-2. add `#@` in the end of parameter line
-3. add `____ #@` after all the parameters
+1. source the `xargparse`
+2. add `#@` before the function line, 
+3. add `#@` in the end of parameter line
+4. add `____ #@` after all the parameters
+5. add `main "$@"` at the end of the script file
 
 Here is an example of the output when running from the ./examples/simple_example.sh:
 ![simple](https://user-images.githubusercontent.com/23163073/177006668-27eb6ca0-8f3b-4718-83bf-1a6b00817bfb.gif)
@@ -71,6 +79,20 @@ function complicated_fun()
 And now the output of help and usage messages:
 
 ![detail](https://user-images.githubusercontent.com/23163073/177007375-a6af11c9-6245-432d-8cb3-d0ba4cdba844.gif)
+
+
+Note
+
+the keywords listed below are used by xargparse and DONOT used them as argument identifier
+
+|  keyword   |  description  | example
+|  ----  | ----  | ----  |
+|action| Specify how an argument should be handled. suported actions are `store action`  `append action`  `costom action` | action=store_true, action=store_false, action=store_xxx, action=append,  action=costom_function |
+|choices| Limit values to a specific set of choices |choices=( x x1 x2 ) |
+|nargs| Number of times the argument can be used | nargs=*, nargs=?, nargs=+  |
+|help| Help message for an argument |  |
+|filter| Used by xcomplete to filter which files to be list.  | filter='-dir'  |
+
 
 
 
