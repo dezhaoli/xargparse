@@ -83,9 +83,14 @@ And now the output of help and usage messages:
 
 The xargparse use `#@` to mark functions as public subcommads and mark varables as recognized function parameters, and then use some keywords to create argument specifications. It supports positional arguments, options that accept values, and on/off flags
 
+```shell
 version="2.0.0"                       #@ -v; --version;			//option that takes a value 
+
 ws="eeeee"                            #@ workspace;			//positional argument, no -/--, the name (workspace) is optional.
+
 is_force=false                        #@ '-f';action='store_true';	//on/off flag
+```
+
 
 
 Function Signature Keywords:
@@ -94,8 +99,8 @@ Function Signature Keywords:
 |  ----  | ----  | ----  |
 |kind| Specify this is a special kind of function. Suported kinds are `main-ex`  `label`  | kind=main-ex, kind=label |
 |alias| Specify a alias for this function, like svn, aliases co as a shorthand for checkout |alias=co |
-|flag| Used by xcomplete to add a flag to function usage | flag='*'  |
 |help| Help message for an function | help='some message' |
+|flag| Used by xcomplete to add a flag to function usage | flag='*'  |
 |group| Used by xcomplete to group the argument help message  | group='xxx'  |
 
 Function body Keywords:
