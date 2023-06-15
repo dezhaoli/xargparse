@@ -83,6 +83,11 @@ And now the output of help and usage messages:
 
 The xargparse use `#@` to mark functions as public subcommads and mark varables as recognized function parameters, and then use some keywords to create argument specifications. It supports positional arguments, options that accept values, and on/off flags
 
+version="2.0.0"                       #@ -v; --version;			//option that takes a value 
+ws="eeeee"                            #@ workspace;			//positional argument, no -/--, the name (workspace) is optional.
+is_force=false                        #@ '-f';action='store_true';	//on/off flag
+
+
 Function Signature Keywords:
 
 |  keyword   |  description  | example
@@ -100,7 +105,6 @@ Note:the keywords listed below are used by xargparse and DONOT used them as argu
 |  keyword   |  description  | example
 |  ----  | ----  | ----  |
 |action| Specify how an argument should be handled. suported actions are `store action`  `append action`  `costom action` | action=store_true, action=store_false, action=store_xxx, action=append,  action=costom_function |
-|alias| Specify a alias for this argument |alias=xxx |
 |choices| Limit values to a specific set of choices |choices=( x x1 x2 ) |
 |nargs| Number of times the argument can be used | nargs=*, nargs=?, nargs=+  |
 |help| Help message for an argument | help='some message' |
