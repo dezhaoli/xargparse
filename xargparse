@@ -44,7 +44,6 @@ XARGPARES_COMPLETE_DIR=~/".xargparse/bash_completion.d"
 
 XARGPARES_REGEXP_SECTION2="
 /^[[:space:]]*(local[[:space:]]+)?([^[:space:]=]*)=(.*[^[:space:]])?[[:space:]]+#@[[:space:]]*(.*)/ {
-    s//\4;dest=\2;default=\3;section=2;/;
     s//\4;x_dest=\2;x_default=\3;x_section=2;/;
     s/^[[:space:]]*([\"']?[a-zA-Z0-9_]+[\"']?)([[:space:]]*;.*)/x_pos=\1\2/
 
