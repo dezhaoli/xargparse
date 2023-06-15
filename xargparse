@@ -128,11 +128,11 @@ XARGPARES_Class_Function_Body="
 "
 XARGPARES_Class_Function_Body_Last="
     x_is_last=false
-    x_l_group=
     x_l_func=
     x_l_alias=
     x_l_flag=
     x_l_help=
+    x_l_group=
     x_l_opt_str=
     x_l_pos_str=
 
