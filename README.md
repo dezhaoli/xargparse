@@ -37,7 +37,7 @@ All you need to do is:
 1. source the `xargparse`
 2. add `#@` before the function line, 
 3. add `#@` in the end of parameter line
-4. add `____ #@` after all the parameters
+4. add `____ $@` after all the parameters
 5. add `main "$@"` at the end of the script file
 
 Here is an example of the output when running from the ./examples/simple_example.sh:
