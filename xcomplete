@@ -21,7 +21,10 @@
 # limitations under the License.
 ###########################################################
 
-
+function _xcomplete_debug_echo(){
+    ${XARGPARES_DEBUG:-false} && echo "$*" >> ~/Desktop/complete.log
+    :
+}
 function _xcomplete()
 {
     local XTRACE
@@ -29,10 +32,7 @@ function _xcomplete()
 
     local cur prev words cword i
 
-    function _debug_echo(){
-        ${XARGPARES_DEBUG:-false} && echo "$*" >> ~/Desktop/complete.log
-        :
-    }
+
 
     # case: bash-completion installed 
     if [[ -n "$BASH_COMPLETION" ]]; then
@@ -59,13 +59,13 @@ function _xcomplete()
         i=2
 
     fi
-        _debug_echo ''
-        _debug_echo "======================================"
-        _debug_echo "words=[${words[*]}]" >&2
-        _debug_echo "i=[$i]" >&2
-        _debug_echo "cword=[$cword]" >&2
-        _debug_echo "cur=[$cur]" >&2
-        _debug_echo "prev=[$prev]" >&2
+        _xcomplete_debug_echo ''
+        _xcomplete_debug_echo "======================================"
+        _xcomplete_debug_echo "words=[${words[*]}]" >&2
+        _xcomplete_debug_echo "i=[$i]" >&2
+        _xcomplete_debug_echo "cword=[$cword]" >&2
+        _xcomplete_debug_echo "cur=[$cur]" >&2
+        _xcomplete_debug_echo "prev=[$prev]" >&2
 
     COMPREPLY=()
 
@@ -86,7 +86,7 @@ function _xcomplete()
 
     function _reset_arg()
     {
-        section=
+        x_section=
         eval ${XARGPARES_Class_Function_Signature}
         eval ${XARGPARES_Class_Function_Body}
     }
@@ -103,20 +103,20 @@ function _xcomplete()
         while read line; do
             _reset_arg
             _parse_line
-            _debug_echo "parse line=[$line]"
+            _xcomplete_debug_echo "parse line=[$line]"
             
-        if ((section==1)); then
-            [[ -n "$func" ]] && sub_cmd_list+=( "$func" )
-            [[ -n "$alias" ]] && sub_cmd_list+=( "$alias" ) && sub_cmd_alias_map["$alias"]="$func"
+        if ((x_section==1)); then
+            [[ -n "$x_func" ]] && sub_cmd_list+=( "$x_func" )
+            [[ -n "$alias" ]] && sub_cmd_list+=( "$alias" ) && sub_cmd_alias_map["$alias"]="$x_func"
             
-        elif ((section==5)); then
+        elif ((x_section==5)); then
 
-            if [[ -n "$short" || -n "$long" ]]; then
-                sub_cmd_opts+=( "${short}" "${long}" )
+            if [[ -n "$x_short" || -n "$x_long" ]]; then
+                sub_cmd_opts+=( "${x_short}" "${x_long}" )
             fi
-            [[ -z "$short" && -z "$long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
-            [[ -n "$short" ]] && s_optspecs["$short"]="$line"
-            [[ -n "$long" ]] && l_optspecs["$long"]="$line"
+            [[ -z "$x_short" && -z "$x_long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
+            [[ -n "$x_short" ]] && s_optspecs["$x_short"]="$line"
+            [[ -n "$x_long" ]] && l_optspecs["$x_long"]="$line"
         fi
 
         done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "$XARGPARES_REGEXP_ALL_SECTION")
@@ -129,14 +129,14 @@ function _xcomplete()
             _reset_arg
             _parse_line || continue  #argument missing definition
             
-            _debug_echo "parse sub_cmd line=[$line]"
+            _xcomplete_debug_echo "parse sub_cmd line=[$line]"
 
-            if [[ -n "$short" || -n "$long" ]]; then
-                sub_cmd_opts+=( "${short}" "${long}" )
+            if [[ -n "$x_short" || -n "$x_long" ]]; then
+                sub_cmd_opts+=( "${x_short}" "${x_long}" )
             fi
-            [[ -z "$short" && -z "$long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
-            [[ -n "$short" ]] && s_optspecs["$short"]="$line"
-            [[ -n "$long" ]] && l_optspecs["$long"]="$line"
+            [[ -z "$x_short" && -z "$x_long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
+            [[ -n "$x_short" ]] && s_optspecs["$x_short"]="$line"
+            [[ -n "$x_long" ]] && l_optspecs["$x_long"]="$line"
 
         done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
         /^function $sub_cmd\(\)/,/^}/ { 
@@ -171,6 +171,7 @@ function _xcomplete()
 
     if ! $is_global_op; then
         # case 0 sub_cmd;
+        _xcomplete_debug_echo "sub_cmd=$sub_cmd, sub_cmd_list=${sub_cmd_list[*]}"
         if [[ -z "$sub_cmd" ]]; then
             COMPREPLY=( $( compgen -W "${sub_cmd_list[*]} ${sub_cmd_opts[*]}" -- "${cur}" ) )
 
@@ -184,9 +185,10 @@ function _xcomplete()
     # parse the argument here
     local is_force_pos=false
     local p_index=0
-
+    _xcomplete_debug_echo "i=$i, cword=$cword"
     while (( i < cword )); do
         local x_i_x="${words[i]}" # NOTE: be careful, the name should be complicated here to avoid conflict
+        _xcomplete_debug_echo "x_i_x=$x_i_x"
         ((i++))
         if [[ "${x_i_x}" == "--" ]]; then
             is_force_pos=true
@@ -194,21 +196,21 @@ function _xcomplete()
         fi
         local line=
         _reset_arg
-        if [[ "${x_i_x}" =~ ^-[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then                   # short
+        if [[ "${x_i_x}" =~ ^-[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then                   # x_short
             line="${s_optspecs["${x_i_x}"]}"
-        elif [[ "${x_i_x}" =~ ^--[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then                # long
+        elif [[ "${x_i_x}" =~ ^--[a-zA-Z0-9_].*$ ]] && ! $is_force_pos; then                # x_long
             line="${l_optspecs["${x_i_x}"]}"
         else                                                                                # position
             ((p_index < ${#p_argspecs[@]})) || return 0  # the rest that we have no completions for
             line="${p_argspecs[$p_index]}"
             ((p_index++))
         fi
-        _debug_echo "set line=[$line]"
+        _xcomplete_debug_echo "set line=[$line]"
         _parse_line || return 0  #argument missing definition
 
 
 
-        if [[ -z "$short" && -z "$long" ]]; then # position argument
+        if [[ -z "$x_short" && -z "$x_long" ]]; then # position argument
             if [[ "$nargs" == '+' || "$nargs" == '*' ]]; then
                 while (( i < cword )); do
                     local x_i_x="${words[i]}"
@@ -238,7 +240,7 @@ function _xcomplete()
             local tmp_arg_choices=( $( "$cmd" "$action" ) )
             COMPREPLY=( $( compgen -W "${tmp_arg_choices[*]}" -- "$cur" ) )
         else
-            _debug_echo "$filter"
+            _xcomplete_debug_echo "$filter"
             if [[ "$filter" == -dir ]]; then
                 _filedir -d
             elif [[ -n "$filter" ]]; then
@@ -250,7 +252,7 @@ function _xcomplete()
         fi
     }
 
-    _debug_echo "p_index=$p_index, p_argspecs=${#p_argspecs[@]}"
+    _xcomplete_debug_echo "p_index=$p_index, p_argspecs=${#p_argspecs[@]}"
 
     local line=
     _reset_arg
@@ -265,10 +267,10 @@ function _xcomplete()
     elif ((p_index < ${#p_argspecs[@]})); then
         line="${p_argspecs[$p_index]}"
     else
-        _debug_echo "no one match"
+        _xcomplete_debug_echo "no one match"
          return 0
     fi
-    _debug_echo "==>line: $line"
+    _xcomplete_debug_echo "==>line: $line"
     _parse_line || return 0  #argument missing definition
     _comp_reply_from_line
     
@@ -279,9 +281,17 @@ function _xcomplete()
 function _init()
 {
     source "$(dirname "$(realpath "$BASH_SOURCE")")/xargparse"
-    mkdir -p "$XARGPARES_COMPLETE_DIR"
 
+    _xcomplete_debug_echo "BASH_SOURCE=$BASH_SOURCE, XARGPARES_COMPLETE_DIR=$XARGPARES_COMPLETE_DIR"
+
+    if [[ -z "$XARGPARES_COMPLETE_DIR" ]]; then
+        echo "error: XARGPARES_COMPLETE_DIR not fount!" >&2
+        return 1
+    fi
+
+    mkdir -p "$XARGPARES_COMPLETE_DIR"
     while read line; do
+        _xcomplete_debug_echo "complete add [$line]"
         complete -F _xcomplete "$line"
     done < <( ls -1 "$XARGPARES_COMPLETE_DIR" )
 }
