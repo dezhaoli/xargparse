@@ -99,7 +99,7 @@ Function Signature Keywords:
 |  ----  | ----  | ----  |
 |kind| Specify this is a special kind of function. Suported kinds are `main-ex`  `label`  | kind=main-ex, kind=label |
 |alias| Specify a alias for this function, like svn, aliases co as a shorthand for checkout |alias=co |
-|help| Help message for an function | help='some message' |
+|help| Help message for a function | help='some message' |
 |group| Used to group the argument help message  | group='xxx'  |
 |flag| Used by xcomplete to add a flag to function usage | flag='*'  |
 
