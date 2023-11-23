@@ -1,0 +1,308 @@
+#!/usr/bin/env -S bash
+###########################################################
+# @Author: dezhaoli@tencent.com
+# @Date:   
+# Please contact dezhaoli if you have any questions.
+###########################################################
+
+
+# Copyright 2009, The Android Open Source Project
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#   http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+###########################################################
+
+
+: ${XFORMAT_DIE_LOG_FILE}
+: ${XFORMAT_IS_PRINT_TIME:=false}
+
+
+#===========================
+
+: ${xformat_last_seconds:=0}
+
+#https://web.archive.org/web/20191222201924/http://www.termsys.demon.co.uk/vtansi.htm
+
+XFORMAT_VERSION=2.2.0
+
+XFORMAT_BLACK='\033[0;30m'
+XFORMAT_RED='\033[0;31m'
+XFORMAT_GREEN='\033[0;32m'
+XFORMAT_YELLOW='\033[0;33m'
+XFORMAT_BLUE='\033[0;34m'
+XFORMAT_MAGENTA='\033[0;35m'
+XFORMAT_CYAN='\033[0;36m'
+XFORMAT_WHITE='\033[0;37m'
+XFORMAT_NC='\033[0m'
+
+
+readonly \
+        XFORMAT_VERSION \
+        XFORMAT_BLACK \
+        XFORMAT_RED \
+        XFORMAT_GREEN \
+        XFORMAT_YELLOW \
+        XFORMAT_BLUE \
+        XFORMAT_MAGENTA \
+        XFORMAT_CYAN \
+        XFORMAT_WHITE \
+        XFORMAT_NC 
+
+#===========================
+
+#@
+function xformat-time {
+  local t=$1    #@
+
+
+  local d=$((t/60/60/24))
+  local h=$((t/60/60%24))
+  local m=$((t/60%60))
+  local s=$((t%60))
+  (( $d > 0 )) && printf '%d days ' $d
+  (( $h > 0 )) && printf '%02d:' $h
+  (( $m > 0 )) && printf '%02d:' $m
+  printf '%02d\n' $s
+}
+
+_xformat_echo() {
+  if $XFORMAT_IS_PRINT_TIME ; then
+    echo -e  "$(date +%T)" "[elapsed: $(xformat-time $(($SECONDS - $xformat_last_seconds )))]" "$*"
+    xformat_last_seconds=$SECONDS
+  else
+    echo -e "$*"
+  fi
+}
+
+#@ desc='echo a die message to stderr and exit'
+function die() {
+  set +x
+  if [[ -n "$XFORMAT_DIE_LOG_FILE" && -d "$(dirname "$XFORMAT_DIE_LOG_FILE")" ]]; then
+    echo "FATAL: $* " >> "$XFORMAT_DIE_LOG_FILE"
+  fi
+  _xformat_echo "${XFORMAT_RED}FATAL: $* ${XFORMAT_NC}" >&2
+  exit 1
+}
+
+#@ desc='echo a progress message to stderr'
+function progress() {
+    echo "$@" >&2
+}
+
+#@ desc='echo a information message to stderr'
+function info() {
+  local XTRACE;shopt -qo xtrace && set +x && XTRACE=true
+  _xformat_echo "${XFORMAT_CYAN}$* ${XFORMAT_NC}" >&2
+  ${XTRACE:-false} && set -x
+  return 0
+}
+
+#@ desc='echo a warning message to stderr'
+function warn() {
+  local XTRACE;shopt -qo xtrace && set +x && XTRACE=true
+  _xformat_echo "${XFORMAT_YELLOW}$* ${XFORMAT_NC}" >&2
+  ${XTRACE:-false} && set -x
+  return 0
+}
+
+function xformat-colorize()
+{
+  __xformat_parse_args()
+  {
+    while true; do
+      if [[ "$1" == "--dim" ]]; then
+        args+=( --attr DIM )
+        shift
+      elif [[ "$1" == "--bright" ]]; then
+        args+=( --attr BRIGHT )
+        shift
+      elif [[ "$1" == "--underscore" ]]; then
+        args+=( --attr UNDERSCORE )
+        shift
+      elif [[ "$1" == "--blink" ]]; then
+        args+=( --attr BLINK )
+        shift
+      else
+        args+=( "$*" )
+        break
+      fi
+    done
+    xformat-text "${args[@]}"
+  }
+  red()
+  {
+    local args=( --fg RED )
+    __xformat_parse_args "$@"
+  }
+  green()
+  {
+    local args=( --fg GREEN )
+    __xformat_parse_args "$@"
+  }
+  yellow()
+  {
+    local args=( --fg YELLOW )
+    __xformat_parse_args "$@"
+  }
+  blue()
+  {
+    local args=( --fg BLUE )
+    __xformat_parse_args "$@"
+  }
+  magenta()
+  {
+    local args=( --fg MAGENTA )
+    __xformat_parse_args "$@"
+  }
+  cyan()
+  {
+    local args=( --fg CYAN )
+    __xformat_parse_args "$@"
+  }
+  white()
+  {
+    local args=( --fg WHITE )
+    __xformat_parse_args "$@"
+  }
+
+  xred()
+  {
+    local args=( --fg BLACK --bg RED )
+    __xformat_parse_args "$@"
+  }
+  xgreen()
+  {
+    local args=( --fg BLACK --bg GREEN )
+    __xformat_parse_args "$@"
+  }
+  xyellow()
+  {
+    local args=( --fg BLACK --bg YELLOW )
+    __xformat_parse_args "$@"
+  }
+  xblue()
+  {
+    local args=( --fg BLACK --bg BLUE )
+    __xformat_parse_args "$@"
+  }
+  xmagenta()
+  {
+    local args=( --fg BLACK --bg MAGENTA )
+    __xformat_parse_args "$@"
+  }
+  xcyan()
+  {
+    local args=( --fg BLACK --bg CYAN )
+    __xformat_parse_args "$@"
+  }
+  xwhite()
+  {
+    local args=( --fg BLACK --bg WHITE )
+    __xformat_parse_args "$@"
+  }
+
+}
+
+
+
+#@ help='xformat-text --fg BLACK --bg GREEN --attr UNDERSCORE message'
+function xformat-text(){
+  local fg bg attr
+  while (($#>2)); do
+    if [[ "$1" == '--fg' ]]; then
+        fg="${2^^}"
+    elif [[ "$1" == '--bg' ]]; then
+        bg="${2^^}"
+    elif [[ "$1" == '--attr' ]]; then
+        attr="${2^^}"
+    else
+        die "unsupported argument: '$1' "
+    fi
+    shift 2
+  done
+
+  # set display attibutes
+  local attibutes
+  {
+    if [[ ! ${__xformat_color_map@a} == A ]]; then
+      declare -A __xformat_color_map=(
+        [BLACK]=0
+        [RED]=1
+        [GREEN]=2
+        [YELLOW]=3
+        [BLUE]=4
+        [MAGENTA]=5
+        [CYAN]=6
+        [WHITE]=7
+
+        [BRIGHT]=1
+        [DIM]=2
+        [UNDERSCORE]=4
+        [BLINK]=5
+        [REVERSE]=7
+        [HIDDEN]=8
+      )
+
+      declare -A __xformat_color_cache
+    fi
+
+    local key="${fg:-_}${bg:-_}${attr:-_}"
+    if [[ -n "${__xformat_color_cache[$key]}" ]]; then
+      attibutes="${__xformat_color_cache[$key]}"
+    else
+      attibutes="\033[0"
+
+      if [[ -n "$fg" && -n "${__xformat_color_map[$fg]}" ]]; then
+        attibutes="${attibutes};3${__xformat_color_map[$fg]}"
+      fi
+
+      if [[ -n "$bg" && -n "${__xformat_color_map[$bg]}" ]]; then
+        attibutes="${attibutes};10${__xformat_color_map[$bg]}"
+      fi
+
+      if [[ -n "$attr" && -n "${__xformat_color_map[$attr]}" ]]; then
+        attibutes="${attibutes};${__xformat_color_map[$attr]}"
+      fi
+
+      attibutes="${attibutes}m"
+      __xformat_color_cache[$key]=$attibutes
+    fi
+  }
+  echo -e "${attibutes}$* ${XFORMAT_NC}" 
+}
+
+#@
+function xformat-file-name-size()
+{
+  local name="$1"  #@
+  local size="$2"  #@
+
+  ((size>0)) && printf "%50s: %15s%15s\n" "$name" "$size" "$(numfmt --to=iec --suffix=B --format="%.2f" "$size")"
+  return 0
+}
+
+
+#@
+function xformat-to-utf8-file()
+{
+  local path="$1"        #@
+  # ____ "$@"
+
+  
+  bom=$(xxd  -l 6 -p "$path")
+  if [[ $bom =~ ^fffe.* || $bom =~ ^feff.* ]]; then
+    local temp_file=$(mktemp)
+    iconv --from-code UTF-16 --to-code UTF-8 "$path" | tr -d '\r' > "$temp_file" || return 1
+    mv -f "$temp_file" "$path"
+  fi
+}
+

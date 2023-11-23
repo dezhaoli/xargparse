@@ -1,0 +1,221 @@
+#!/usr/bin/env -S bash
+###########################################################
+# @Author: dezhaoli@tencent.com
+# @Date:   
+# Please contact dezhaoli if you have any questions.
+###########################################################
+
+
+# Copyright 2009, The Android Open Source Project
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#   http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+###########################################################
+
+
+
+if [[ -n "$WSL_DISTRO_NAME" ]]; then
+	IS_WSL=true
+	
+	#/mnt/c/Users/dezhaoli/AppData/Local/Android/Sdk/emulator/emulator.exe
+	#/mnt/c/Users/dezhaoli/AppData/Local/Android/Sdk/platform-tools/adb.exe
+	#/mnt/c/Program Files/Microsoft/jdk-11.0.12.7-hotspot/java.exe
+
+	#@ help=''
+	function create-exe-wrapper()
+	{
+		local file=$1
+		local tmp_output=$2
+
+		file=$(realpath "$file")
+		file=${file%%.exe}
+		# [[ -f "$file" ]] && return
+		rm -fr "$file"
+
+		local file_name=$(basename "$file")
+		local handle_win_path='
+args=()
+for i in "$@"; do
+	if [[ -e "$i" ]]; then
+		args+=( "$(wslpath -am "$i" )"  )
+	else
+		args+=( "$i"  )
+	fi
+done'
+
+		cat > "${tmp_output:-$file}" <<EOF
+#!/usr/bin/env -S bash
+$handle_win_path
+
+cd "\$(realpath "\$(dirname "\$0")")"
+./$file_name.exe "\${args[@]}"
+exit \$?
+EOF
+
+	}
+
+
+	#@ help='create a wrapper shell for bat, auto parse wls path to window path'
+	function create-bat-wrapper()
+	{
+		local file=$1
+		local rename_file=$2
+
+		file=$(realpath "$file")
+		file=${file%%.bat}
+		[[ -f "$file" ]] && return
+		rm -fr "$file"
+
+		local file_name=$(basename "$file")
+
+		cat > "${rename_file:-$file}" <<EOF
+#!/usr/bin/env -S bash
+# auto genarate by $(basename "${BASH_SOURCE[0]}")
+. $(which d)
+bat ${file}.bat "\$@"
+exit \$?
+EOF
+
+	}
+
+	#@ help='cmd bat ( wsl path -> window path )'
+	function bat()
+	{
+		local args=()
+		if [[ "$1" =~ .bat$ ]]; then
+			args+=("$(wslpath -m "$1" )")
+		else
+			args+=("$(wslpath -m "${1}.bat" )")
+		fi
+		
+		shift
+		while (($#)); do
+			local item="$1"
+			shift
+			if [[ "$item" =~ .*=.* ]]; then
+				local lhs=${item%%=*}
+				local rhs=${item##*=}
+				if [[ -e "$rhs" ]]; then
+					args+=( "${lhs}=$(wslpath -m "$rhs" )" )
+					continue
+				fi
+			fi
+			args+=( "$item" )
+		done
+
+		cmd.exe /c "${args[@]}"
+	}
+
+
+	function cmd()
+	{
+		to_win_path "$@"
+		cmd.exe /c "${args[@]}"
+	}
+
+	function to_win_path()
+	{
+		args=()
+		for i in "$@"; do
+			# handle --xx=/mnt/x/xx
+			if [[ "$i" =~ .*=.* ]]; then
+				local lhs=${i%%=*}
+				local rhs=${i##*=}
+				if [[ -e "$rhs" ]]; then
+					args+=( "${lhs}=$(wslpath -m "$rhs" )" )
+				else
+					args+=( "$i"  )
+				fi
+			# handle path argument
+			elif [[ -e "$i" ]]; then
+				args+=( "$(wslpath -m "$i" )"  )
+			else
+				args+=( "$i"  )
+			fi
+		done
+
+		echo "${args[*]}"
+	}
+
+
+	#@ help='e.g. winpath XX ( XX=/mnt/c/xx -> XX=C:/xx )'
+	function winpath() { 
+		while (($#>0)); do
+			local p=$1 
+			shift
+			[[ "${!p}" =~ ^[a-zA-Z]:[\\/].* ]] && continue
+			printf -v "${p}" "%s" "$(_wslpath "${!p}")"
+		done
+
+	}
+
+	#@ help='( wsl path -> window path ) and handle the path which not exist'
+	function _wslpath()
+	{
+		local XTRACE
+		shopt -qo xtrace && set +x && XTRACE=true
+
+		local cur_path=$1 tmp_path='' output ret
+
+		output=$( (wslpath -m $cur_path) 2>&1 )
+		while (($? != 0)); do
+		    tmp_path=$tmp_path${tmp_path:+/}$(echo $cur_path | rev | cut -d '/' -f1)
+		    cur_path=$(echo $cur_path | rev | cut -s -d '/' -f2- | rev)
+		    output=$( (wslpath -m ${cur_path:-./}) 2>&1 )
+		done
+		if [[ -n "$tmp_path" ]]; then
+		    tmp_path=$(printf "%s" "$tmp_path" | rev)
+		    printf '%s/%s\n' "$output" "$tmp_path"
+		else
+		    printf '%s\n' "$output"
+		fi
+		${XTRACE:-false} && set -x
+	}
+#############  MAC   ###################
+	function open()
+	{
+	    local path="$1"
+
+	    local wpath="$(wslpath -aw "$path")"
+	    cd /mnt/c/
+	    cmd.exe /C start "$wpath"
+	    cd - >/dev/null
+	}
+
+	function mono()
+	{
+		"$@"
+	}
+	function sed()
+	{
+		local args=() i
+		while (($#>0)); do
+			if [[ "$1" == "-i" ]]; then
+				args+=( "$1" )
+				shift
+				shift
+			else
+				args+=( "$1" )
+				shift
+			fi
+			
+		done
+		/usr/bin/sed "${args[@]}"
+	}
+#############  MAC   ###################
+else
+	IS_WSL=false
+
+	function winpath() { : ; }
+	function bat() { : ; }
+	function create-bat-wrapper() { : ; }
+fi
