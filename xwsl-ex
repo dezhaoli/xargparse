@@ -211,6 +211,11 @@ EOF
 		done
 		/usr/bin/sed "${args[@]}"
 	}
+	function md5()
+	{
+		read arg
+		md5sum <<< $arg | grep -o '[0-9a-zA-Z]*'
+	}
 #############  MAC   ###################
 else
 	IS_WSL=false

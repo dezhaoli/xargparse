@@ -30,6 +30,7 @@ __d_init()
 
     export LC_CTYPE=en_US.UTF-8
 
+    : ${IS_WSL:=false}
     XFORMAT_IS_PRINT_TIME=true
     XARGPARES_SMART_MODE=true
 }
