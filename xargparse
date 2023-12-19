@@ -629,7 +629,9 @@ ${opts_str:+"Valid options:"}${opts_str}
         shift
         if [[ "${x_i_x}" == "--" ]]; then
             is_force_pos=true
-            continue
+            if ! ${XARGPARES_PARSE_MAIN_EX:-false}; then
+                continue
+            fi
         fi
         local line=
         local is_positional=false
