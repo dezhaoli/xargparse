@@ -178,7 +178,7 @@ function _xargparse_cmd_src()
     _xargparse_debug_echo "BASH_SOURCE=${BASH_SOURCE[*]}"
     XARGPARES_CMD_SRC=()
     local src full_src
-    for src in ${BASH_SOURCE[@]:2}; do
+    for src in "${BASH_SOURCE[@]:2}"; do
         full_src="$(realpath "$src")" || _xargparse_die "target cmd [$src] not found"
         [[ " ${XARGPARES_CMD_SRC[*]} " =~ " $full_src " ]] && continue
         XARGPARES_CMD_SRC+=( "$full_src" ) # convert to absolute path
