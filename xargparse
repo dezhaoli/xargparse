@@ -756,8 +756,14 @@ function _xargparse_real_subcmd() # find the real sub command function
 }
 function main()
 {
-
-    # _xargparse_debug_echo "main-> [${BASH_SOURCE[*]}]"
+    # bug: when the subcommand call read -p 'xxx', process substitution will hold the message.
+    # filter out useless information, when 'set -x'
+#     _xargparse_execute "$@" 2> >( grep -v "\+ local XTRACE\|+ shopt -qo xtrace\|+ set +x" ) >&2
+# }
+# function _xargparse_execute()
+# {
+    
+    # _xargparse_debug_echo "main-> [ ${BASH_SOURCE[*]} ]"
     # only execute the super main
     if [[ "${#BASH_SOURCE[@]}" != 2 ]]; then
         return 0
@@ -797,7 +803,8 @@ function main()
     # find main-ex function and call it
     function _find_and_call_main_ex()
     {
-        _xargparse_debug_echo "find main-ex in ( ${XARGPARES_CMD_SRC_CALL_ORDER[@]:-${XARGPARES_CMD_SRC[@]}} )"
+        local src_file_list=( "${XARGPARES_CMD_SRC_CALL_ORDER[@]:-${XARGPARES_CMD_SRC[@]}}" )
+        _xargparse_debug_echo "find main-ex in ( ${src_file_list[@]} )"
         XARGPARES_PARSE_MAIN_EX=true
         while read line; do
             eval local ${XARGPARES_Class_Function_Signature}
@@ -810,7 +817,7 @@ function main()
             shopt -qo xtrace && set +x && XTRACE=true
             _xargparse_debug_echo "after: xargparse_main_args=${xargparse_main_args[@]}"
         
-        done< <(cat "${XARGPARES_CMD_SRC_CALL_ORDER[@]:-${XARGPARES_CMD_SRC[@]}}" | sed  -nE "
+        done< <(cat "${src_file_list[@]}" | sed  -nE "
         H
         x
         /^##@@[[:space:]]*(kind='?main-ex'?.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
@@ -832,10 +839,10 @@ function main()
     _xargparse_real_subcmd tmp_func_name
     xargparse_main_args[0]=$tmp_func_name
 
+    _xargparse_debug_echo "${xargparse_main_args[@]}..."
     ${XERREXIT:-false} && set -e
     ${XTRACE:-false} && set -x 
 
-    _xargparse_debug_echo "${xargparse_main_args[@]}..."
     "${xargparse_main_args[@]}"
 
 }
