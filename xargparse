@@ -27,22 +27,22 @@
 ##### the arguments below can be set outside #####
 ##################################################
 
-# XARGPARES_DEBUG=true
-# XARGPARES_USE_BASH_ARGV=true
-# XARGPARES_SMART_MODE=true
-# XARGPARES_CMD_SRC=()
-# XARGPARES_CMD_SRC_CALL_ORDER=()
+# XARGPARSE_DEBUG=true
+# XARGPARSE_USE_BASH_ARGV=true
+# XARGPARSE_SMART_MODE=true
+# XARGPARSE_CMD_SRC=()
+# XARGPARSE_CMD_SRC_CALL_ORDER=()
 ##################################################
 
 
-XARGPARES_VERSION=3.1.0
-XARGPARES_COMPLETE_DIR=~/".xargparse/bash_completion.d"
-# XARGPARES_MAIN_EX_NAME='main-ex'
-# XARGPARES_MAIN_NAME='_main'
-# XARGPARES_LABEL_NAME='label'
+XARGPARSE_VERSION=3.1.0
+XARGPARSE_COMPLETE_DIR=~/".xargparse/bash_completion.d"
+# XARGPARSE_MAIN_EX_NAME='main-ex'
+# XARGPARSE_MAIN_NAME='_main'
+# XARGPARSE_LABEL_NAME='label'
 
 
-XARGPARES_REGEXP_SECTION2="
+XARGPARSE_REGEXP_SECTION2="
 /^[[:space:]]*(local[[:space:]]+)?([^[:space:]=]*)=(.*[^[:space:]])?[[:space:]]+#@[[:space:]]*(.*)/ {
     s//\4;x_dest=\2;x_default=\3;x_section=2;/;
     s/^[[:space:]]*([\"']?[a-zA-Z0-9_]+[\"']?)([[:space:]]*;.*)/x_pos=\1\2/
@@ -58,7 +58,7 @@ XARGPARES_REGEXP_SECTION2="
     p;
 }
 "
-XARGPARES_REGEXP_SECTION5="
+XARGPARSE_REGEXP_SECTION5="
 /^[[:space:]]*(local[[:space:]]+)?([^[:space:]=]*)=(.*[^[:space:]])?[[:space:]]+#@[[:space:]]*(.*)/ {
     s//\4;x_dest=\2;x_default=\3;x_section=5;/;
 
@@ -73,7 +73,7 @@ XARGPARES_REGEXP_SECTION5="
     p;
 }
 "
-XARGPARES_REGEXP_ALL_SECTION="
+XARGPARSE_REGEXP_ALL_SECTION="
     H
     /^##@@[[:space:]]*(kind='?label'?.*)/ {
         s//x_section=3;\1/
@@ -87,7 +87,7 @@ XARGPARES_REGEXP_ALL_SECTION="
         : loop_2
         n
         /^}/d
-        ${XARGPARES_REGEXP_SECTION2}
+        ${XARGPARSE_REGEXP_SECTION2}
 
         b loop_2
     }
@@ -98,13 +98,13 @@ XARGPARES_REGEXP_ALL_SECTION="
         : loop_5
         n
         /^}/d
-        ${XARGPARES_REGEXP_SECTION5}
+        ${XARGPARSE_REGEXP_SECTION5}
 
         b loop_5
     }"
 
 
-XARGPARES_Class_Function_Signature="
+XARGPARSE_Class_Function_Signature="
     x_section=
     x_func=
     kind=
@@ -113,7 +113,7 @@ XARGPARES_Class_Function_Signature="
     help=
     group=
 "
-XARGPARES_Class_Function_Body="
+XARGPARSE_Class_Function_Body="
     x_section=
     x_dest=
     x_default=
@@ -126,7 +126,7 @@ XARGPARES_Class_Function_Body="
     help=
     filter=
 "
-XARGPARES_Class_Function_Body_Last="
+XARGPARSE_Class_Function_Body_Last="
     x_is_last=false
     x_l_func=
     x_l_alias=
@@ -139,13 +139,13 @@ XARGPARES_Class_Function_Body_Last="
 "
 
 readonly \
-        XARGPARES_VERSION \
-        XARGPARES_COMPLETE_DIR \
-        XARGPARES_REGEXP_SECTION2 \
-        XARGPARES_REGEXP_SECTION5 \
-        XARGPARES_REGEXP_ALL_SECTION \
-        XARGPARES_Class_Function_Signature \
-        XARGPARES_Class_Function_Body
+        XARGPARSE_VERSION \
+        XARGPARSE_COMPLETE_DIR \
+        XARGPARSE_REGEXP_SECTION2 \
+        XARGPARSE_REGEXP_SECTION5 \
+        XARGPARSE_REGEXP_ALL_SECTION \
+        XARGPARSE_Class_Function_Signature \
+        XARGPARSE_Class_Function_Body
 
 
 
@@ -161,11 +161,11 @@ function _xargparse_has()
     return $?
 }
 function _xargparse_debug_echo(){
-    ${XARGPARES_DEBUG:-false} && echo "$*" >> ~/Desktop/xargparse.log
+    ${XARGPARSE_DEBUG:-false} && echo "$*" >> ~/Desktop/xargparse.log
     :
 }
 function _xargparse_debug_echo_class(){
-    ${XARGPARES_DEBUG:-false} || return 0
+    ${XARGPARSE_DEBUG:-false} || return 0
     local class="${!1}"
     eval echo "$1:" $(echo "$class" |sed -nE '/([a-z]+)=/s//\1=\"\$\1;\"/g ; /([a-z]+)=.*\(\)/s//\1=\"\(\$\{\1\[\*\]\}\);\"/g;p') >> ~/Desktop/xargparse.log
     
@@ -173,18 +173,18 @@ function _xargparse_debug_echo_class(){
 
 function _xargparse_cmd_src()
 {
-    [[ -n "$XARGPARES_CMD_SRC" ]] && return
+    [[ -n "$XARGPARSE_CMD_SRC" ]] && return
 
     _xargparse_debug_echo "BASH_SOURCE=${BASH_SOURCE[*]}"
-    XARGPARES_CMD_SRC=()
+    XARGPARSE_CMD_SRC=()
     local src full_src
     for src in "${BASH_SOURCE[@]:2}"; do
         full_src="$(realpath "$src")" || _xargparse_die "target cmd [$src] not found"
-        [[ " ${XARGPARES_CMD_SRC[*]} " =~ " $full_src " ]] && continue
-        XARGPARES_CMD_SRC+=( "$full_src" ) # convert to absolute path
+        [[ " ${XARGPARSE_CMD_SRC[*]} " =~ " $full_src " ]] && continue
+        XARGPARSE_CMD_SRC+=( "$full_src" ) # convert to absolute path
     done
 
-    _xargparse_debug_echo "XARGPARES_CMD_SRC=${XARGPARES_CMD_SRC[*]}"
+    _xargparse_debug_echo "XARGPARSE_CMD_SRC=${XARGPARSE_CMD_SRC[*]}"
 }
 
 function _xargparse_print_subcmd()
@@ -211,14 +211,14 @@ function _xargparse_usage_verbose()
 
 
     local line=
-    eval local ${XARGPARES_Class_Function_Signature} ${XARGPARES_Class_Function_Body}
+    eval local ${XARGPARSE_Class_Function_Signature} ${XARGPARSE_Class_Function_Body}
     function _reset_arg()
     {
-        eval ${XARGPARES_Class_Function_Signature} ${XARGPARES_Class_Function_Body}
+        eval ${XARGPARSE_Class_Function_Signature} ${XARGPARSE_Class_Function_Body}
     }
 
     if $is_verbose; then
-        eval local ${XARGPARES_Class_Function_Body_Last}
+        eval local ${XARGPARSE_Class_Function_Body_Last}
         function print_last()
         {
             if $x_is_last; then
@@ -236,7 +236,7 @@ function _xargparse_usage_verbose()
         _reset_arg
         eval local $line
         if ((x_section==1)); then
-            _xargparse_debug_echo_class "XARGPARES_Class_Function_Signature"
+            _xargparse_debug_echo_class "XARGPARSE_Class_Function_Signature"
             if [[ -n "$group" ]]; then
                 if [[ -z "${groups[$group]}" ]]; then
                     groups[$group]=''
@@ -260,7 +260,7 @@ function _xargparse_usage_verbose()
 
             
         elif ((x_section==2)); then
-            _xargparse_debug_echo_class "XARGPARES_Class_Function_Body"
+            _xargparse_debug_echo_class "XARGPARSE_Class_Function_Body"
             if $is_verbose; then
                 local opt_str=
                 local pos_str=
@@ -321,7 +321,7 @@ function _xargparse_usage_verbose()
             main_ex_str="${main_ex_str}$help\n"
 
         elif ((x_section==5)); then
-            _xargparse_debug_echo_class "XARGPARES_Class_Function_Body"
+            _xargparse_debug_echo_class "XARGPARSE_Class_Function_Body"
 
             local opt_str=
             if [[ -n "$x_short" && -n "$x_long" ]]; then
@@ -352,7 +352,7 @@ function _xargparse_usage_verbose()
         else
             _xargparse_die "unknown line: [$line]"
         fi
-    done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "$XARGPARES_REGEXP_ALL_SECTION")
+    done< <(cat "${XARGPARSE_CMD_SRC[@]}" | sed  -nE "$XARGPARSE_REGEXP_ALL_SECTION")
     $is_verbose && print_last
 
     local group_str g
@@ -360,8 +360,8 @@ function _xargparse_usage_verbose()
         group_str="$(eval printf "%s\\\n" \""\${${g}[@]}"\"| sort -k 1.4)\n\n$group_str"
     done
 
-    printf "usage: $(basename ${XARGPARES_CMD_SRC[-1]}) <subcommand> [options] [args]
-Type '$(basename ${XARGPARES_CMD_SRC[-1]}) <subcommand> -h' for help on a specific subcommand.
+    printf "usage: $(basename ${XARGPARSE_CMD_SRC[-1]}) <subcommand> [options] [args]
+Type '$(basename ${XARGPARSE_CMD_SRC[-1]}) <subcommand> -h' for help on a specific subcommand.
 ${label_str:+\n}$label_str
 Available subcommands:
 $( printf "%s\n" "${subcmds[@]}"| sort -k 1.4)
@@ -380,14 +380,14 @@ function ____()
     shopt -qo xtrace && set +x && XTRACE=true
     [[ $- == *e* ]] && set +e && XERREXIT=true
 
-    if (($#==0)) && ${XARGPARES_USE_BASH_ARGV:-true}; then
+    if (($#==0)) && ${XARGPARSE_USE_BASH_ARGV:-true}; then
         local xargparse_offset=1
         local xargparse_args=()
         local xargparse_i=${#BASH_ARGV[@]}
         while (( xargparse_i - xargparse_offset > 0 )); do
             local xargparse_arg="${BASH_ARGV[xargparse_i - 1 - $xargparse_offset]}"
             ((xargparse_i=xargparse_i-1))
-            if [[ " ${XARGPARES_IGNORE_BASH_ARGV[*]} " =~ " $xargparse_arg " ]]; then # TODO: remove this ugly code
+            if [[ " ${XARGPARSE_IGNORE_BASH_ARGV[*]} " =~ " $xargparse_arg " ]]; then # TODO: remove this ugly code
                 continue
             fi
             xargparse_args[${#xargparse_args[@]}]="$xargparse_arg"
@@ -396,7 +396,7 @@ function ____()
     fi
 
 
-    if ${XARGPARES_SMART_MODE:-true}; then
+    if ${XARGPARSE_SMART_MODE:-true}; then
         local xargparse_args=()
         END_OF_OPT=
         while (( "$#" )); do
@@ -440,11 +440,11 @@ function parse_args(){
     local line=
 
 
-    eval local  ${XARGPARES_Class_Function_Body}
+    eval local  ${XARGPARSE_Class_Function_Body}
 
     function _reset_arg()
     {
-        eval  ${XARGPARES_Class_Function_Body}
+        eval  ${XARGPARSE_Class_Function_Body}
     }
     function _parse_line()
     {
@@ -464,7 +464,7 @@ function parse_args(){
             _reset_arg
             _parse_line
 
-            _xargparse_debug_echo_class "XARGPARES_Class_Function_Body"
+            _xargparse_debug_echo_class "XARGPARSE_Class_Function_Body"
             if (( $x_section == 1)); then
                 if [[ $funcname == _main ]]; then
                     label_str="${help}${help:+\n}"
@@ -527,7 +527,7 @@ function parse_args(){
                     
                 fi
             fi
-        done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
+        done< <(cat "${XARGPARSE_CMD_SRC[@]}" | sed  -nE "
         H
         x
         /^#@[[:space:]]*(.*)\nfunction [[:space:]]*($funcname)\(\).*/ {
@@ -536,7 +536,7 @@ function parse_args(){
             : loop_2
             n
             /^}/d
-            ${XARGPARES_REGEXP_SECTION2}
+            ${XARGPARSE_REGEXP_SECTION2}
 
             b loop_2
         }")
@@ -545,7 +545,7 @@ function parse_args(){
             funcname=
         fi
 
-        printf "${label_str}usage: $(basename ${XARGPARES_CMD_SRC[-1]})${funcname:+ }${funcname} [options] [args] 
+        printf "${label_str}usage: $(basename ${XARGPARSE_CMD_SRC[-1]})${funcname:+ }${funcname} [options] [args] 
 
 ${poss_str:+"Valid args:"}${poss_str}${poss_str:+\n}
 ${opts_str:+"Valid options:"}${opts_str}
@@ -555,7 +555,7 @@ ${opts_str:+"Valid options:"}${opts_str}
 
     function _die()
     {
-        ${XARGPARES_PARSE_MAIN_EX:-false} || _func_usage >&2
+        ${XARGPARSE_PARSE_MAIN_EX:-false} || _func_usage >&2
         _xargparse_die "$1"
     }
 
@@ -568,15 +568,15 @@ ${opts_str:+"Valid options:"}${opts_str}
         _xargparse_debug_echo "#parse_args# line=[$line]"
         _reset_arg
         _parse_line
-        _xargparse_debug_echo_class "XARGPARES_Class_Function_Body"
+        _xargparse_debug_echo_class "XARGPARSE_Class_Function_Body"
 
         [[ -z "$x_short" && -z "$x_long" ]] && p_argspecs[${#p_argspecs[@]}]="$line"
         [[ -n "$x_short" ]] && s_optspecs["$x_short"]="$line"
         [[ -n "$x_long" ]] && l_optspecs["$x_long"]="$line"
 
-    done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
+    done< <(cat "${XARGPARSE_CMD_SRC[@]}" | sed  -nE "
     /^function $funcname\(\)/,/^}/ { 
-        ${XARGPARES_REGEXP_SECTION2}
+        ${XARGPARSE_REGEXP_SECTION2}
     }")
 
     function _check_choice()
@@ -603,7 +603,7 @@ ${opts_str:+"Valid options:"}${opts_str}
     function _set_main_args()
     {
 
-        if ${XARGPARES_PARSE_MAIN_EX:-false}; then
+        if ${XARGPARSE_PARSE_MAIN_EX:-false}; then
             if $is_positional || [[ -z "$line" ]]; then
                 xargparse_main_args+=( "${x_i_x}" )
                 return 0
@@ -613,7 +613,7 @@ ${opts_str:+"Valid options:"}${opts_str}
         return 1
     }
 
-    if ${XARGPARES_PARSE_MAIN_EX:-false}; then
+    if ${XARGPARSE_PARSE_MAIN_EX:-false}; then
         xargparse_main_args=()
     fi
 # set -x
@@ -629,7 +629,7 @@ ${opts_str:+"Valid options:"}${opts_str}
         shift
         if [[ "${x_i_x}" == "--" ]]; then
             is_force_pos=true
-            if ! ${XARGPARES_PARSE_MAIN_EX:-false}; then
+            if ! ${XARGPARSE_PARSE_MAIN_EX:-false}; then
                 continue
             fi
         fi
@@ -722,7 +722,7 @@ ${opts_str:+"Valid options:"}${opts_str}
 
 function _xargparse_usage()
 {
-    if ${XARGPARES_PARSE_MAIN_EX:-false}; then
+    if ${XARGPARSE_PARSE_MAIN_EX:-false}; then
         # show usage concise
         if (( ${#xargparse_main_args[@]} == 0 )); then
             _xargparse_usage_verbose false >&2
@@ -739,13 +739,13 @@ function _xargparse_real_subcmd() # find the real sub command function
 {
     local __func_to_find="$1"
     while read line; do
-        eval local ${XARGPARES_Class_Function_Signature}
+        eval local ${XARGPARSE_Class_Function_Signature}
         eval local $line
         if [[ "${!__func_to_find}" == "$alias" ]]; then
             printf -v "${__func_to_find}" "%s" "${x_func}"
         fi
 
-    done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
+    done< <(cat "${XARGPARSE_CMD_SRC[@]}" | sed  -nE "
     H
     x
     /^#@[[:space:]]*(.*)\nfunction [[:space:]]*([^[:space:]]*)\(\).*/ {
@@ -778,9 +778,9 @@ function main()
 
     # install bash-complete
     {
-        local reg_f="$XARGPARES_COMPLETE_DIR/$(basename "${XARGPARES_CMD_SRC[-1]}")"
-        if [[ ! -f "$reg_f" || "${XARGPARES_CMD_SRC[-1]}" -nt "$reg_f" ]]; then
-            printf '%s\n' "${XARGPARES_CMD_SRC[@]}" > "$reg_f"
+        local reg_f="$XARGPARSE_COMPLETE_DIR/$(basename "${XARGPARSE_CMD_SRC[-1]}")"
+        if [[ ! -f "$reg_f" || "${XARGPARSE_CMD_SRC[-1]}" -nt "$reg_f" ]]; then
+            printf '%s\n' "${XARGPARSE_CMD_SRC[@]}" > "$reg_f"
             # (($? == 0 )) && echo "Registered to bash completion: ok" || echo "Registered to bash completion: fail"
             (($? == 0 )) || echo "Registered to bash completion: fail"
         fi
@@ -797,17 +797,17 @@ function main()
     }
 
 
-    XARGPARES_USE_BASH_ARGV=false
+    XARGPARSE_USE_BASH_ARGV=false
 
     local xargparse_main_args=("$@")
     # find main-ex function and call it
     function _find_and_call_main_ex()
     {
-        local src_file_list=( "${XARGPARES_CMD_SRC_CALL_ORDER[@]:-${XARGPARES_CMD_SRC[@]}}" )
+        local src_file_list=( "${XARGPARSE_CMD_SRC_CALL_ORDER[@]:-${XARGPARSE_CMD_SRC[@]}}" )
         _xargparse_debug_echo "find main-ex in ( ${src_file_list[@]} )"
-        XARGPARES_PARSE_MAIN_EX=true
+        XARGPARSE_PARSE_MAIN_EX=true
         while read line; do
-            eval local ${XARGPARES_Class_Function_Signature}
+            eval local ${XARGPARSE_Class_Function_Signature}
             eval local $line
 
             _xargparse_has "$x_func" || _xargparse_die "the function[$x_func] pointed to by kind[$kind] was not found"
@@ -829,7 +829,7 @@ function main()
         ")
 
         _xargparse_usage
-        unset XARGPARES_PARSE_MAIN_EX
+        unset XARGPARSE_PARSE_MAIN_EX
     }
     _find_and_call_main_ex
     unset _find_and_call_main_ex
@@ -851,7 +851,7 @@ function main()
 if [[ ! "$0" =~ ^-.* ]]; then  # case not call from -bash
     _xargparse_cmd_src
     if [[  "$(basename "$0")" == "$(basename "$BASH_SOURCE")" ]]; then # call ourself
-        echo "$(basename "$0") $XARGPARES_VERSION" 
+        echo "$(basename "$0") $XARGPARSE_VERSION" 
     fi
 
 fi

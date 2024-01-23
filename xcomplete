@@ -22,7 +22,7 @@
 ###########################################################
 
 function _xcomplete_debug_echo(){
-    ${XARGPARES_DEBUG:-false} && echo "$*" >> ~/Desktop/complete.log
+    ${XARGPARSE_DEBUG:-false} && echo "$*" >> ~/Desktop/complete.log
     :
 }
 function _xcomplete()
@@ -70,8 +70,8 @@ function _xcomplete()
     COMPREPLY=()
 
 
-    local XARGPARES_CMD_SRC=() p=
-    while read p; do XARGPARES_CMD_SRC+=( "$p" ); done < <(cat "$XARGPARES_COMPLETE_DIR/$(basename "${words[0]}")")
+    local XARGPARSE_CMD_SRC=() p=
+    while read p; do XARGPARSE_CMD_SRC+=( "$p" ); done < <(cat "$XARGPARSE_COMPLETE_DIR/$(basename "${words[0]}")")
     local sub_cmd=
     local sub_cmd_list=( help )
     local -A sub_cmd_alias_map
@@ -87,8 +87,8 @@ function _xcomplete()
     function _reset_arg()
     {
         x_section=
-        eval ${XARGPARES_Class_Function_Signature}
-        eval ${XARGPARES_Class_Function_Body}
+        eval ${XARGPARSE_Class_Function_Signature}
+        eval ${XARGPARSE_Class_Function_Body}
     }
     function _parse_line()
     {
@@ -119,7 +119,7 @@ function _xcomplete()
             [[ -n "$x_long" ]] && l_optspecs["$x_long"]="$line"
         fi
 
-        done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "$XARGPARES_REGEXP_ALL_SECTION")
+        done< <(cat "${XARGPARSE_CMD_SRC[@]}" | sed  -nE "$XARGPARSE_REGEXP_ALL_SECTION")
 
     }
 
@@ -138,9 +138,9 @@ function _xcomplete()
             [[ -n "$x_short" ]] && s_optspecs["$x_short"]="$line"
             [[ -n "$x_long" ]] && l_optspecs["$x_long"]="$line"
 
-        done< <(cat "${XARGPARES_CMD_SRC[@]}" | sed  -nE "
+        done< <(cat "${XARGPARSE_CMD_SRC[@]}" | sed  -nE "
         /^function $sub_cmd\(\)/,/^}/ { 
-            ${XARGPARES_REGEXP_SECTION2}
+            ${XARGPARSE_REGEXP_SECTION2}
         }")
 
     }
@@ -232,7 +232,7 @@ function _xcomplete()
 
     function _comp_reply_from_line()
     {
-        local cmd="${XARGPARES_CMD_SRC[-1]}"
+        local cmd="${XARGPARSE_CMD_SRC[-1]}"
         if ((${#choices[@]})); then
             COMPREPLY=( $( compgen -W "${choices[*]}" -- "$cur" ) )
         elif [[ -n "$action" ]] && "$cmd" _xargparse_has "$action"; then
@@ -282,19 +282,19 @@ function _init()
 {
     source "$(dirname "$(realpath "$BASH_SOURCE")")/xargparse"
 
-    _xcomplete_debug_echo "BASH_SOURCE=$BASH_SOURCE, XARGPARES_COMPLETE_DIR=$XARGPARES_COMPLETE_DIR"
+    _xcomplete_debug_echo "BASH_SOURCE=$BASH_SOURCE, XARGPARSE_COMPLETE_DIR=$XARGPARSE_COMPLETE_DIR"
 
-    if [[ -z "$XARGPARES_COMPLETE_DIR" ]]; then
-        echo "error: XARGPARES_COMPLETE_DIR not fount!" >&2
+    if [[ -z "$XARGPARSE_COMPLETE_DIR" ]]; then
+        echo "error: XARGPARSE_COMPLETE_DIR not fount!" >&2
         return 1
     fi
 
-    mkdir -p "$XARGPARES_COMPLETE_DIR"
+    mkdir -p "$XARGPARSE_COMPLETE_DIR"
     while read line; do
         _xcomplete_debug_echo "complete add [$line]"
         complete -F _xcomplete "$line"
-    done < <( ls -1 "$XARGPARES_COMPLETE_DIR" )
+    done < <( ls -1 "$XARGPARSE_COMPLETE_DIR" )
 }
-if [[ -z "$XARGPARES_VERSION" ]]; then
+if [[ -z "$XARGPARSE_VERSION" ]]; then
     _init
 fi
