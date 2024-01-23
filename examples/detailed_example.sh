@@ -4,11 +4,11 @@
 # @Date:   
 # Please contact dezhaoli if you have any questions.
 ###########################################################
-# XARGPARES_CMD_SRC="$(realpath $0)"  # This line is not needed if your command is already in $PATH
+# XARGPARSE_CMD_SRC="$(realpath $0)"  # This line is not needed if your command is already in $PATH
 
 
 # source xargparse by:
-[[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)" #(recommend)
+[[ -n "$XARGPARSE_VERSION" ]] || . "$(which xargparse)" #(recommend)
 
 # or by: 
 # . $(dirname $0)/../xargparse

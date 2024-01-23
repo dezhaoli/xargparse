@@ -16,7 +16,7 @@ Let us start with a very simple example
 ./examples/simple_example.sh
 ```shell
 
-[[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
+[[ -n "$XARGPARSE_VERSION" ]] || . "$(which xargparse)"
 
 #@
 function simple_fun()
@@ -150,7 +150,7 @@ not work unless this is that case.
 
 add the following code to your script:
 
-    [[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
+    [[ -n "$XARGPARSE_VERSION" ]] || . "$(which xargparse)"
 
 Code Completion
 -------

@@ -10,7 +10,7 @@
 
 
 
-# [[ -n "$XARGPARES_VERSION" ]] || . "$(which xargparse)"
+# [[ -n "$XARGPARSE_VERSION" ]] || . "$(which xargparse)"
 
 #@
 function nested_fun()
