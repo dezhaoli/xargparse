@@ -150,7 +150,7 @@ EOF
 	#@ help='e.g. winpath XX ( XX=/mnt/c/xx -> XX=C:/xx )'
 	function winpath() { 
 		while (($#>0)); do
-			local p=$1 
+			local p="$1" 
 			shift
 			[[ "${!p}" =~ ^[a-zA-Z]:[\\/].* ]] && continue
 			printf -v "${p}" "%s" "$(_wslpath "${!p}")"
@@ -183,11 +183,18 @@ EOF
 #############  MAC   ###################
 	function open()
 	{
-	    local path="$1"
+	    local path="${1//\\//}"
+	    if [[ -f "$path" && ! "$path" =~ ^/mnt/ ]]; then
+			path="$( dirname "$path" )"
+	    fi
 
-	    local wpath="$(wslpath -aw "$path")"
+		if [[ ! "$path" =~ ^[a-zA-Z]:[\\/].* ]]; then
+			path="$(wslpath -aw "$path")"
+		fi
+
+
 	    cd /mnt/c/
-	    cmd.exe /C start "$wpath"
+	    cmd.exe /C start "$path"
 	    cd - >/dev/null
 	}
 
