@@ -54,10 +54,11 @@ done'
 
 		cat > "${tmp_output:-$file}" <<EOF
 #!/usr/bin/env -S bash
+# auto genarate by $(basename "${BASH_SOURCE[0]}")
 $handle_win_path
 
-cd "\$(realpath "\$(dirname "\$0")")"
-./$file_name.exe "\${args[@]}"
+
+"\$(dirname "\$0")/$file_name.exe" "\${args[@]}"
 exit \$?
 EOF
 
@@ -71,17 +72,16 @@ EOF
 		local rename_file=$2
 
 		file=$(realpath "$file")
-		file=${file%%.bat}
-		[[ -f "$file" ]] && return
-		rm -fr "$file"
+		rename_file="${rename_file:-${file%%.bat}}"
+		[[ -f "$rename_file" ]] && return
+		rm -fr "$rename_file"
 
-		local file_name=$(basename "$file")
 
-		cat > "${rename_file:-$file}" <<EOF
+		cat > "${rename_file}" <<EOF
 #!/usr/bin/env -S bash
 # auto genarate by $(basename "${BASH_SOURCE[0]}")
 . $(which d)
-bat ${file}.bat "\$@"
+bat ${file} "\$@"
 exit \$?
 EOF
 
